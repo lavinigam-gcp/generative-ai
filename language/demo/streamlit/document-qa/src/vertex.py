@@ -3,8 +3,9 @@ import vertexai
 import streamlit as st
 from tenacity import retry, stop_after_attempt, wait_random_exponential
 
-PROJECT_ID = ""
-vertexai.init(project=PROJECT_ID, location="us-central1")
+PROJECT_ID = "YOUR_GOOGLE_PROJECT_ID" #Your Google Project Id
+LOCATION_NAME="us-central1" #us-central1 for now
+vertexai.init(project=PROJECT_ID, location=LOCATION_NAME)
 
 
 @st.cache_resource
