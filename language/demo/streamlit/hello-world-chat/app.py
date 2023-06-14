@@ -21,7 +21,7 @@ st.set_page_config(
 )
 
 
-image = Image.open('/Users/lavinigam/Documents/office-work/LLM/vertex_palm_streamlit_flask/demo/streamlit/hello-world-chat/image/palm.jpg')
+image = Image.open('./image/palm.jpg')
 st.image(image)
 st.title(":sunglasses: :red[PaLM 2] :blue[Vertex AI] Chat :orange[Demo] :sunglasses: :white_check_mark: ")
 # st.markdown("<h1 style='text-align: center; color: black;'>PaLM 2 Vertex AI Chat Demo</h1>", unsafe_allow_html=True)
@@ -34,7 +34,7 @@ create_session_state()
 # setting_tab, chat_tab = st.columns(2)
 
 with st.sidebar:
-    image = Image.open('/Users/lavinigam/Documents/office-work/LLM/vertex_palm_streamlit_flask/demo/streamlit/hello-world-chat/image/sidebar_image.jpg')
+    image = Image.open('./image/sidebar_image.jpg')
     st.image(image)
     st.markdown("<h2 style='text-align: center; color: red;'>Setting Tab</h1>", unsafe_allow_html=True)
 

@@ -3,8 +3,9 @@
 from vertexai.preview.language_models import ChatModel, InputOutputTextPair, ChatSession, TextGenerationModel
 import vertexai
 
-PROJECT_ID = "cloud-llm-preview1"
-vertexai.init(project=PROJECT_ID, location="us-central1")
+PROJECT_ID = "YOUR_GOOGLE_PROJECT_ID" #Your Google Project Id
+LOCATION_NAME="us-central1" #us-central1 for now
+vertexai.init(project=PROJECT_ID, location=LOCATION_NAME)
 
 
 
