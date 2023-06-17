@@ -1,6 +1,12 @@
-google-cloud-aiplatform==1.25.0
+google-cloud-aiplatform
+google-cloud-documentai
+backoff
+ruamel.yaml
 streamlit
 streamlit-chat
 pandas
 PyPDF2
-textract
+chromadb
+sequence-evaluate
+sentence-transformers 
+rouge
