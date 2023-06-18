@@ -7,6 +7,4 @@ streamlit-chat
 pandas
 PyPDF2
 chromadb
-sequence-evaluate
-sentence-transformers 
-rouge
+rouge-score
