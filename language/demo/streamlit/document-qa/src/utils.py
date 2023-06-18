@@ -8,16 +8,30 @@ import re
 import numpy as np
 from src.vertex import *
 from src.vector_store_chromadb import *
-# @st.cache_data()
-# def get_env_config():
-#     path = Path("./src/env.yaml")
-#     yaml = YAML(typ='safe')
-#     return yaml.load(path)
+
+def chat_input_submit():
+    st.session_state.chat_input = st.session_state.chat_widget
+    st.session_state.chat_widget = ''
+
+def clear_duplicate_data():
+    for i in range(len(st.session_state['past'])-1,0,-1):
+        if st.session_state['past'][i][i] == st.session_state['past'][i-1][i-1]:
+            del st.session_state['past'][i]
+            del st.session_state['generated'][i]
+
+def clear_chat() -> None:
+    st.session_state['chat_model'] = ""
+    st.session_state['generated'] = []
+    st.session_state['past'] = []
+    st.session_state['context'] = ""
+    st.session_state['example'] = []
+    st.session_state['temperature'] = []
 
 
 def reset_session() -> None:
     """_summary_: Resets the session state to default values.
     """
+    clear_chat()
     st.session_state['vector_store_data_chromadb_object'] = ""
     st.session_state['vector_store_data_typedf'] = []
     st.session_state['processed_data_list'] = []
@@ -37,12 +51,23 @@ def reset_session() -> None:
     st.session_state['process_doc'] = False
     st.session_state['chunk_size'] = 500
     st.session_state['top_sort_value'] = 5
-    st.session_state['vector_db_pandas_context'] = ""
-    st.session_state['vector_db_pandas_matched_db'] = pd.DataFrame()
-    st.session_state['vector_db_pandas_source'] = ""
+    st.session_state['vector_db_context'] = ""
+    st.session_state['vector_db_matched_db'] = pd.DataFrame()
+    st.session_state['vector_db_source'] = ""
     st.session_state['answer'] = ""
     st.session_state['rewritten_answer']  = ""
     st.session_state['rewritten_bullet_answer']  = ""
+    st.session_state['question'] = ""
+    st.session_state['focused_answer'] = ""
+    st.session_state['chat_model'] = ""
+    st.session_state['generated'] = []
+    st.session_state['past'] = []
+    st.session_state['context'] = ""
+    st.session_state['example'] = []
+    st.session_state['temperature'] = []
+    st.session_state['focused_answer_explainer'] = ""
+    st.session_state['focused_citation_df'] = pd.DataFrame()
+    st.session_state['document_summary_mapreduce'] = ""
     
 def hard_reset_session() -> None: 
     st.session_state = {states : [] for states in st.session_state}
@@ -52,19 +77,44 @@ def create_session_state():
     """
     Creating session states for the app.
     """
+    if "document_summary_mapreduce" not in st.session_state:
+        st.session_state['document_summary_mapreduce'] = ""
+    if "focused_citation_df" not in st.session_state:
+        st.session_state['focused_citation_df'] = pd.DataFrame()
+    if "focused_answer_explainer" not in st.session_state:
+        st.session_state['focused_answer_explainer'] = ""
+    if 'generated' not in st.session_state:
+        st.session_state['generated'] = []
+    if 'past' not in st.session_state:
+        st.session_state['past'] = []
+    if 'temperature' not in st.session_state:
+        st.session_state['temperature'] = []
+    if 'debug_mode' not in st.session_state:
+        st.session_state['debug_mode'] = False
+    if 'chat_input' not in st.session_state:
+        st.session_state['chat_input'] = ''
+    if 'context' not in st.session_state:
+        st.session_state['context'] = ''
+    if 'example' not in st.session_state:
+        st.session_state['example'] = []
+    if 'chat_model' not in st.session_state:
+        st.session_state['chat_model'] = ""
+    if 'focused_answer' not in st.session_state:
+        st.session_state['focused_answer'] = ""
+    if 'question' not in st.session_state:
+        st.session_state['question']  = ""
     if 'rewritten_bullet_answer' not in  st.session_state:
         st.session_state['rewritten_bullet_answer']  = ""
     if 'answer' not in st.session_state:
-        st.session_state['vector_db_pandas_context'] = ""
+        st.session_state['vector_db_context'] = ""
     if 'rewritten_answer' not in st.session_state:
         st.session_state['rewritten_answer'] = ""
-    if 'vector_db_pandas_context' not in st.session_state:
-        st.session_state['vector_db_pandas_context'] = ""
-    if 'vector_db_pandas_matched_db' not in st.session_state:
-        st.session_state['vector_db_pandas_matched_db'] = pd.DataFrame()
-    if 'vector_db_pandas_source' not in st.session_state:
-        st.session_state['vector_db_pandas_source'] = ""
-
+    if 'vector_db_context' not in st.session_state:
+        st.session_state['vector_db_context'] = ""
+    if 'vector_db_matched_db' not in st.session_state:
+        st.session_state['vector_db_matched_db'] = pd.DataFrame()
+    if 'vector_db_source' not in st.session_state:
+        st.session_state['vector_db_source'] = ""
     if 'vector_store_data_chromadb_object' not in st.session_state:
         st.session_state['vector_store_data_chromadb_object'] = ""
     if 'vector_store_data_typedf' not in st.session_state:
@@ -286,123 +336,104 @@ def get_filter_context_from_vectordb(vector_db_choice:str = "Pandas",
         
         return (context, top_matched_df,source)
 
+# function to pass in the apply function on dataframe to extract answer for specific question on each row.
+def get_answer(df):
+    prompt = f"""Answer the question as precise as possible using the provided context. If the answer is
+                 not contained in the context, say "answer not available in context" \n\n
+                  Context: \n {df['content']}?\n
+                  Question: \n {st.session_state['question']} \n
+                  Answer:
+            """
 
+    pred = text_generation_model_with_backoff(prompt=prompt)
+    return pred
+
+
+def get_focused_map_reduce_without_embedding(vector_db_choice:str = "Pandas",
+                                     question: str = "",
+                                     sort_index_value:int = 20):
+    # st.write("size of vector store: ",st.session_state['vector_store_data_typedf'].shape[0])
+    # st.write("sort_index_value:",sort_index_value)
+    # st.write("vector store len: ",st.session_state['vector_store_data_typedf'].shape[0])
+
+    if vector_db_choice == "Pandas":
+        if sort_index_value < st.session_state['vector_store_data_typedf'].shape[0]:
+            sort_index_value = sort_index_value
+        else:
+            sort_index_value = int((st.session_state['vector_store_data_typedf'].shape[0])/2)
+
+    context, top_matched_df, source = get_filter_context_from_vectordb(vector_db_choice ,
+                                    {st.session_state['question']} ,
+                                    sort_index_value
+                                    )
+    top_matched_df["predicted_answer"] = top_matched_df.apply(get_answer, axis=1)
+    # st.write(top_matched_df)
+    context_map_reduce = [eachanswer
+                            for eachanswer in top_matched_df["predicted_answer"].values
+                            if eachanswer.lower() != "answer not available in context"
+                        ]
+    joined = ".".join(context_map_reduce)
+    context = get_text_generation(prompt=f"rewrite the text properly as a professional text with proper english: {joined}")
+    # st.write("context_map_reduce::::",context_map_reduce)
+    prompt = f"""Answer the question using the provided context. If the answer is
+                    not contained in the context, say "precise answers not available in context" \n\n
+                    Context: \n {context_map_reduce}?\n
+                    Question: \n {st.session_state['question']} \n
+                    Answer:
+                """
+    # print("the words in the prompt: ", len(prompt))
+    # print("PaLM Predicted:", generation_model.predict(prompt).text)
+    focused_answer = get_text_generation(prompt=prompt)
+    return focused_answer,context, top_matched_df
     
 
+# Define a function to create a summary of the summaries
+def reduce_summary(summary, prompt_template):
 
-# @st.cache_data
-# def read_documents(documents,chunk_size_value=2000, sample=True, sample_size=10):
-#     """_summary_: Reads the documents and creates a pandas dataframe with all the content and metadata.
-#     cleaning the text and splitting the text into chunks of given size. creating a vector store of the chunks.
+    # Concatenate the summaries from the inital step
+    concat_summary = "\n".join(summary)
 
-#     Args:
-#         documents (_type_): list of documents uploaded by the user.
-#         chunk_size_value (_type_, optional): size of each chunk. Defaults to 2000.
-#         sample (bool, optional): whether to create a sample vector store or not. Defaults to True.
-#         sample_size (int, optional): size of the sample vector store. Defaults to 10.
+    # Create a prompt for the model using the concatenated text and a prompt template
+    prompt = prompt_template.format(text=concat_summary)
 
-#     Returns:
-#         _type_: pandas dataframe with all the content and metadata.
-    
-#     """
-#     final_data = []
-#     with st.spinner('Loading documents and putting them in pandas dataframe.....'):
-#         for eachdoc in documents:
-#             file_name, file_type = os.path.splitext(eachdoc.name)
-#             if file_type == ".pdf":
-#                 # loading pdf files, with page numbers as metadata.
-#                 reader = PdfReader(eachdoc)
-#                 for i, page in enumerate(reader.pages):
-#                     text = page.extract_text()
-#                     if text:
-#                         packet = create_data_packet(
-#                             file_name, file_type, page_number=int(i + 1), file_content=text
-#                         )
+    # Generate a summary using the model and the prompt
+    summary = text_generation_model_with_backoff(prompt=prompt, max_output_tokens=1024)
 
-#                         final_data.append(packet)
-#             elif file_type == ".txt":
-#                 # loading other file types
-#                 # st.write(eachdoc)
-#                 text = eachdoc.read().decode("utf-8")
-#                 # text = textract.process(bytes_data).decode("utf-8")
-#                 packet = create_data_packet(
-#                     file_name, file_type, page_number=-1, file_content=text
-#                 )
-#                 final_data.append(packet)
-        
-#         # st.write(final_data)
-#         pdf_data = pd.DataFrame.from_dict(final_data)
-#         # st.write(pdf_data)
-#         pdf_data = pdf_data.sort_values(
-#             by=["file_name", "page_number"]
-#         )  # sorting the datafram by filename and page_number
-#         pdf_data.reset_index(inplace=True, drop=True)
+    return summary
 
-#     with st.spinner('Splitting data into chunks and cleaning the text...'):
-#         global chunk_size
-#         # you can define how many words should be there in a given chunk.
-#         chunk_size = chunk_size_value
+def get_map_reduce_summary():
+    if st.session_state['processed_data_list']:
+        initial_prompt_template = """
+                                Write a concise summary of the following text delimited by triple backquotes.
 
-#         pdf_data["content"] = pdf_data["content"].apply(
-#         lambda x: re.sub("[^A-Za-z0-9]+", " ", x)
-#                         )
+                                ```{text}```
 
-#         # Apply the chunk splitting logic here on each row of content in dataframe.
-#         pdf_data["chunks"] = pdf_data["content"].apply(split_text)
-#         # Now, each row in 'chunks' contains list of all chunks and hence we need to explode them into individual rows.
-#         pdf_data = pdf_data.explode("chunks")
+                                CONCISE SUMMARY:
+                                """
 
-#         # Sort and reset index
-#         pdf_data = pdf_data.sort_values(by=["file_name", "page_number"])
-#         pdf_data.reset_index(inplace=True, drop=True)
+        final_prompt_template = """
+                                Write a concise summary of the following text delimited by triple backquotes.
+                                Return your response in bullet points which covers the key points of the text.
 
-#     with st.spinner('Building vectors of the chunk..beep boop..taking time....'):
-#         if sample:
-#             pdf_data_sample = pdf_data.sample(sample_size)
-#         else:
-#             pdf_data_sample = pdf_data.copy()
-        
-#         pdf_data_sample["embedding"] = pdf_data_sample["content"].apply(
-#         lambda x: embedding_model_with_backoff([x])
-#         )
-#         pdf_data_sample["embedding"] = pdf_data_sample.embedding.apply(np.array)
-        
-#     st.write("Vectore Store of your documents is created.....")
-#     return pdf_data_sample
+                                ```{text}```
 
+                                BULLET POINT SUMMARY:
+                            """
+        # Create an empty list to store the summaries
+        initial_summary = []
+        for eachblock in st.session_state['processed_data_list']:
 
+             # Create a prompt for the model using the extracted text and a prompt template
+            prompt = initial_prompt_template.format(text=eachblock['content'])
 
-# def get_context_from_question(question, vector_store, sort_index_value=2):
-#     global query_vector
-#     query_vector = np.array(embedding_model_with_backoff([question]))
-#     top_matched = (
-#         vector_store["embedding"]
-#         .apply(get_dot_product)
-#         .sort_values(ascending=False)[:sort_index_value]
-#         .index
-#     )
-#     top_matched_df = vector_store[vector_store.index.isin(top_matched)][
-#         ["file_name", "page_number", "content","chunks"]
-#     ]
-#     context = "\n".join(
-#         vector_store[vector_store.index.isin(top_matched)]["chunks"].values
-#     )
-#     source = f"""filenames: {",".join(top_matched_df['file_name'].value_counts().index) },
-#               pages: {top_matched_df['page_number'].unique()}
-#               """
-#     return context, top_matched_df,source
-# elif file_type == ".txt":
-#     # loading other file types
-#     # st.write(eachdoc)
-#     text = eachdoc.read().decode("utf-8")
-#     # text = textract.process(bytes_data).decode("utf-8")
-#     if text:
-#         text_chunks = get_chunks_iter(text, chunk_size)
-#         for chunk_number, chunk_content in enumerate(text_chunks):
-#             packet = create_data_packet(
-#                 file_name, file_type,page_number=None, chunk_number = chunk_number+1,
-#                 file_content=chunk_content
-#             )
+            # Generate a summary using the model and the prompt
+            summary = text_generation_model_with_backoff(prompt=prompt, max_output_tokens=1024)
 
-#             final_data.append(packet)
-#     final_data.append(packet)
+            # Append the summary to the list of summaries
+            initial_summary.append(summary)
+        # Use defined `reduce` function to summarize the summaries
+        summary = reduce_summary(initial_summary, final_prompt_template)
+        return summary
+    else: 
+        st.write("The document has not been loaded and processed. Kindly do that....")
+        return False

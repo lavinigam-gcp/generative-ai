@@ -5,9 +5,9 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="expanded",
     menu_items={
-        'Get Help': 'https://cloud.google.com/vertex-ai/docs/generative-ai/learn/overview',
-        'Report a bug': "https://www.extremelycoolapp.com/bug",
-        'About': "# This app shows you how to use Vertex PaLM Text Generator API on your custom documents"
+        'Get Help': 'https://github.com/GoogleCloudPlatform/generative-ai',
+        'Report a bug': "https://github.com/GoogleCloudPlatform/generative-ai/issues",
+        'About': "# This app shows you how to use Vertex PaLM API on your custom documents"
     }
 )
 import src.html_component as html_comp
@@ -144,91 +144,190 @@ with st.container():
     if st.session_state['vector_store_flag']:
         
         question = st.text_input('What would you like to ask the documents?')
+        st.session_state['question'] = question
         # get the custom relevant chunks from all the chunks in vector store.
         if question:
             if st.session_state['vector_db'] == "Pandas":
                 context, top_matched_df, source = get_filter_context_from_vectordb(vector_db_choice = st.session_state['vector_db'],
-                                     question = question,
+                                     question = st.session_state['question'],
                                      sort_index_value =  st.session_state['top_sort_value'])
             elif st.session_state['vector_db'] == "Chroma":
                 context, top_matched_df, source = get_filter_context_from_vectordb(vector_db_choice = st.session_state['vector_db'],
-                                     question = question,
+                                     question = st.session_state['question'],
                                      sort_index_value =  st.session_state['top_sort_value'])
                 
             if not top_matched_df.empty: 
-                st.session_state['vector_db_pandas_context'] =  context
-                st.session_state['vector_db_pandas_matched_db'] = top_matched_df
-                st.session_state['vector_db_pandas_source'] = source
-                st.markdown("<h3 style='text-align: center; color: black;'>Here's the answer from document</h3>", unsafe_allow_html=True)
+                st.session_state['vector_db_context'] =  context
+                st.session_state['vector_db_matched_db'] = top_matched_df
+                st.session_state['vector_db_source'] = source
+                st.markdown("<h3 style='text-align: center; color: black;'>Extracted Answers and Insights</h3>", unsafe_allow_html=True)
                 # st.write("Here's the answer from document: ")
-                tab1, tab2, tab3, tab4 = st.tabs(["Grounded", "PaLMReWrite","PaLMBulletSummary","Evaluation"])
+                tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Grounded", "Focused","PaLMReImagine","PaLMBulletSummary","Evaluation","AskDocy"])
                 
                 with tab1:
+                    st.write(":red[This uses Map Reduce Chains with Embedding]")
                     prompt = f""" Answer the question as precise as possible using the provided context. \n\n
-                        Context: \n {st.session_state['vector_db_pandas_context']}?\n
+                        Context: \n {st.session_state['vector_db_context']}?\n
                         Question: \n {question} \n
                         Answer:
                     """
                     answer = get_text_generation(prompt=prompt,temperature=0.0,max_output_tokens=1024)
                     st.session_state['answer'] = answer
                     st.write(st.session_state['answer'])
-                    
+
                 with tab2:
-                    prompt = f"""can you write a essay based on the following text. 
-                    The essay should explain the points given in the {{text}}. 
-                    Do not add anything on your own and only pick context from the {{text}}: \n text: \t {st.session_state['answer']}
-                    """
-                    rewritten_answer = get_text_generation(prompt=prompt,temperature=0.5,max_output_tokens=1024)
-                    st.session_state['rewritten_answer']  = rewritten_answer
-                    st.write(st.session_state['rewritten_answer'])
+                    st.write(":red[This uses focused Map Reduce Chains and finds answer in each relevant chunk]")
+
+                    focused_answer,context, top_matched_df = get_focused_map_reduce_without_embedding(vector_db_choice = st.session_state['vector_db'],
+                                     question = st.session_state['question'])
+                    
+                    st.session_state['focused_citation_df'] = top_matched_df
+                    st.session_state['focused_answer'] = focused_answer
+                    st.session_state['focused_answer_explainer'] = context
+                    st.write(":green[Focused Answer]")
+                    st.write(st.session_state['focused_answer'])
+                    st.write(":green[Focused Raw]")
+                    st.write(st.session_state['focused_answer_explainer'])
+                   
                 with tab3:
+                    st.write("This will take the model response and write descriptive (essay/web article like) text which will include some data from its learning (from internet). The outputs will not be entirely based on the data and may hallucinate")
+                    tab1, tab2 = st.tabs(["Grounded", "Focused"])
+                    with tab1: 
+                        prompt = f"""can you write a essay based on the following text. 
+                        The essay should explain the points given in the {{text}}. 
+                        Do not add anything on your own and only pick context from the {{text}}: \n text: \t {st.session_state['answer']}
+                        """
+                        rewritten_answer = get_text_generation(prompt=prompt,temperature=0.5,max_output_tokens=1024)
+                        st.session_state['rewritten_answer']  = rewritten_answer
+                        st.write(st.session_state['rewritten_answer'])
+                    with tab2: 
+                        prompt = f"""can you write a essay based on the following text. 
+                        The essay should explain the points given in the {{text}}. 
+                        Do not add anything on your own and only pick context from the {{text}}: \n text: \t {st.session_state['focused_answer_explainer']}
+                        """
+                        rewritten_answer = get_text_generation(prompt=prompt,temperature=0.5,max_output_tokens=1024)
+                        st.session_state['rewritten_answer']  = rewritten_answer
+                        st.write(st.session_state['rewritten_answer'])
+                with tab4:
                     prompt = f"""Write a concise summary of the following text delimited by triple backquotes.
-                                Return your response in bullet points which covers the key points of the text.
+                                    Return your response in bullet points which covers the key points of the text.
 
-                            ```{st.session_state['answer']}```
+                                ```{st.session_state['answer']}```
 
-                            BULLET POINT SUMMARY: \n 
-                            """
+                                BULLET POINT SUMMARY: \n 
+                                """
                     rewritten_bullet_answer = get_text_generation(prompt=prompt,temperature=0.5,max_output_tokens=1024)
                     st.session_state['rewritten_bullet_answer']  = rewritten_bullet_answer
                     st.write(st.session_state['rewritten_bullet_answer'])
-                with tab4:
+                with tab5:
                     st.write(""":red[ROUGE] (Recall-Oriented Understudy for Gisting Evaluation) is a set of 
                     metrics for evaluating automatic summarization and machine translation software in natural language processing.""")
-                    st.write(""" \n\n
-                    * :darkblue[The ROUGE-1:] It measures the overlap of unigrams between the system summary and the reference summary. \n
-                    * :darkblue[The ROUGE-L:] It measures the longest common subsequence (LCS) between the system summary and the reference summary. \n
-                    * :darkblue[Precision:] The fraction of the words in the system summary that are also in the reference summary. \n
-                    * :darkblue[Recall:] The fraction of the words in the reference summary that are also in the system summary. \n
-                    * :darkblue[F1 score:] A measure of the harmonic mean of precision and recall. \n\n
-                    Here are the results: 
-                    """)
+                    st.write(""":blue[The ROUGE-1:] It measures the overlap of unigrams between the system summary and the reference summary. """)
+                    st.write(""":blue[The ROUGE-L:] It measures the longest common subsequence (LCS) between the system summary and the reference summary.""")
+                    st.write(""":blue[Precision:] The fraction of the words in the system summary that are also in the reference summary.""")
+                    st.write(""":blue[Recall:] The fraction of the words in the reference summary that are also in the system summary.""")
+                    st.write(""":blue[F1 score:] A measure of the harmonic mean of precision and recall.""")
+                    st.write(""":blue[Note:] We are using "Grounded" answer as a summary of "PaLMContext" to evaluate effectiveness of answers. Very rough approximation, not absolute.""")
+                    st.write("""Here are the results: """)
+                    
                     
                     scorer = rouge_scorer.RougeScorer(['rouge1', 'rougeL'], use_stemmer=True)
                     scores = scorer.score(st.session_state['answer'],
-                                            st.session_state['vector_db_pandas_context'] )
+                                            st.session_state['vector_db_context'] )
                     st.write("Rouge Score 1: ",scores['rouge1'])
                     st.write("Rouge Score L: ",scores['rougeL'])
                     st.markdown( """<a style='display: block; text-align: center;' href="https://github.com/google-research/google-research/tree/master/rouge">Rouge Score</a>""",
                                 unsafe_allow_html=True,
                                 )
+                    
+                with tab6:
+                    if st.button("Clear Chat"):
+                        clear_chat()
+                    if not st.session_state['chat_model']:
+                        if st.button("Create your chat session"):
+                            # with st.spinner('Loading documents using DocumentAI....'):
+                            combined_input_context = st.session_state['vector_db_context'] 
+                            final_context = f"""
+                            Your name is Docy and you have been built on PaLM2. Your soul purpose is to be the best buddy to enterprise.
+                            You do not respond with any other name. You are very funny when responding and people should feel they are talking to human. 
+                            Your goal involves answering question based on the provided context as {{context:}}. You do not answer anything beside that. 
+                            Your expertise is only on the context and anything outside of it should be responded politely saying that you can not respond to anything outside of context. \n
+                            context: {combined_input_context}
+                            """
+                            chat_model = create_session(temperature = 0.1,
+                                                                context= final_context
+                                                                )
+                            st.session_state['chat_model'] = chat_model
+                            st.write("You are now connected to Docy built on PaLM 2 and ready to chat....")
+                            st.write("here is the context: ",combined_input_context)
+                    user_input = st.text_input('Your message to the Docy:', key='chat_widget', on_change=chat_input_submit)
+
+                    if st.session_state.chat_input:
+                        #call the vertex PaLM API and send the user input
+                        with st.spinner('PaLM is working to respond back, wait.....'):
+                            
+                            # try:
+                            bot_message = response(st.session_state['chat_model'], st.session_state.chat_input)
+                        
+                            #store the output
+                            if len(st.session_state['past'])>0:
+                                if st.session_state['past'][-1] != st.session_state.chat_input:
+                                    st.session_state['past'].append(st.session_state.chat_input)
+                                    st.session_state['generated'].append(bot_message)
+                            else:
+                                st.session_state['past'].append(st.session_state.chat_input)
+                                st.session_state['generated'].append(bot_message)
+
+                            # except AttributeError:
+                            #     st.write("You have not created the chat session,click on 'Create your chat session'")
+
+                    #display generated response 
+                    if st.session_state['generated'] and st.session_state['past']:
+                        for i in range(len(st.session_state["generated"])-1,-1,-1):
+                            message(st.session_state['past'][i], is_user=True, key=str(i) + '_user', avatar_style='big-smile')
+                            message(st.session_state["generated"][i], key=str(i), avatar_style='bottts')
+
+                    if st.session_state['debug_mode']:
+                        st.write("len of generated response: ",len(st.session_state["generated"]))
+                        st.write(f'Last mssage to bot: {st.session_state.chat_input}')
+                        st.write(st.session_state)
 
                 # st.write("Here's the source from document: ")
-                st.markdown("<h4 style='text-align: center; color: black;'>Here's the source from document:</h4>", unsafe_allow_html=True)
-                st.dataframe(st.session_state['vector_db_pandas_matched_db'])
+                st.markdown("<h4 style='text-align: center; color: black;'>Sources & Citation</h4>", unsafe_allow_html=True)
+                tab1, tab2 = st.tabs(["Grounded Citations", "Focused Citations"])
+                with tab1: 
+                    st.dataframe(st.session_state['vector_db_matched_db'])
+                with tab2: 
+                    st.dataframe(st.session_state['focused_citation_df'])
                 st.markdown( """<a style='display: block; text-align: center;' href="https://en.wikipedia.org/wiki/Cosine_similarity">Score: Cosine Similarity</a>""",
                                 unsafe_allow_html=True,
                                 )
 
-                st.markdown("<h4 style='text-align: center; color: black;'>Here's the summary of all sources:</h4>", unsafe_allow_html=True)
-                prompt = f"""Write a concise summary of the following text delimited by triple backquotes.
-                                Return your response in bullet points which covers the key points of the text.
+                st.markdown("<h4 style='text-align: center; color: black;'>Summary</h4>", unsafe_allow_html=True)
+                tab1, tab2, tab3 = st.tabs(["Source Summary", "Document Summary","PaLMContext" ])
+                with tab1: 
+                    prompt = f"""Write a concise summary of the following text delimited by triple backquotes.
+                                    Return your response in bullet points which covers the key points of the text.
 
-                            ```{st.session_state['vector_db_pandas_context']}```
+                                ```{st.session_state['vector_db_context']}```
 
-                            BULLET POINT SUMMARY: \n 
-                            """
-                st.write(get_text_generation(prompt=prompt))
+                                BULLET POINT SUMMARY: \n 
+                                """
+                    st.write(get_text_generation(prompt=prompt))
+                with tab2: 
+                    st.write("Using Map Reduce Summary Chain Method:")
+                    if not st.session_state['document_summary_mapreduce']:
+                        with st.spinner('summarizing the document for you..beep boop..taking time....'):
+                            summary_mapreduce = get_map_reduce_summary()
+                            if summary_mapreduce:
+                                st.session_state['document_summary_mapreduce'] = summary_mapreduce
+                                st.write(st.session_state['document_summary_mapreduce'])
+                    else:
+                        st.write(st.session_state['document_summary_mapreduce'])
+
+                with tab3: 
+                    st.write("Here's verbatim of what we are sending to PaLM as context to answer your query: ")
+                    st.write(st.session_state['vector_db_context'])
             else: 
                 st.write("Sorry we couldn't find anything around your query in the database, maybe try a different question?")
         
@@ -244,44 +343,3 @@ with st.container():
     st.write("Top Results that are picked: ", st.session_state['top_sort_value'])
 #Page Footer
 st.write(html_comp.ft, unsafe_allow_html=True)
-
-# st.markdown("![Alt Text](https://cdn.dribbble.com/userupload/3382003/file/original-7da4b54d8bb87c9a6f57dbd4a752e7c3.gif)")
-# st.markdown(
-#     f'<img src="data:image/gif;base64,{data_url}" alt="docy">',unsafe_allow_html=True,)
-# file_ = open("./image/eyes.gif", "rb")
-# contents = file_.read()
-# data_url = base64.b64encode(contents).decode("utf-8")
-# file_.close()
-# st.markdown("<h5 style='text-align: center; color: darkblue;'>Contexual Enterprise Search</h5>", unsafe_allow_html=True)
-# st.write(st.session_state['env_config']['gcp']['PROJECT_ID'])
-# @st.cache_data
-# def cache_vector_store(data):
-#     vector_store = data.copy()
-#     return vector_store
-
-    # sample_bool_val = st.radio("Sample Vector Store?", (True, False))
-    # st.session_state['sample_bool'] = sample_bool_val
-    
-    # if st.session_state['sample_bool']:
-    #     sample_value = st.number_input("Sample Size:",value=10,min_value=1, max_value=10,step=1)
-    #     st.session_state['sample_value'] = sample_value
-
-    # if not st.session_state['process_doc']:
-    #     if st.button("Process"):
-    #         st.session_state['process_doc'] = True
-    #         with st.spinner("Processing...this will take time..."):
-    #             final_data = read_documents(user_docs,
-    #                                         chunk_size_value=st.session_state['chunk_size'],
-    #                                         sample=st.session_state['sample_bool'],
-    #                                          sample_size=st.session_state['sample_value'])
-    #             # vector_store = cache_vector_store(final_data)
-    #             st.session_state['vector_store'] = final_data
-    # else:
-    #     st.write("Your vector store is already built. Here's the shape of it:")
-    #     st.write(st.session_state['vector_store'].shape)
-    
-    # # if st.button("Relode/Reprocess files"):
-    # #     st.session_state['process_doc'] = False
-
-    # # if st.button("Reset Session"):
-    # #     reset_session()
