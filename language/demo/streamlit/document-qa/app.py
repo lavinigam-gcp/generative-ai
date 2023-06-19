@@ -10,6 +10,7 @@ st.set_page_config(
         'About': "# This app shows you how to use Vertex PaLM API on your custom documents"
     }
 )
+from src.session_states import *
 import src.html_component as html_comp
 from ruamel.yaml import YAML
 from pathlib import Path
@@ -53,13 +54,19 @@ st.markdown("<h1 style='text-align: center; color: darkgreen;'>DOCY - Enterprise
 with st.sidebar:
     # sidebar_image = Image.open('./image/bot2.png')
     # st.image(sidebar_image)
-    get_image_displayed(path='./image/bot2.png')
+    get_image_displayed(path='./image/bot2_small.png')
     st.markdown("<h1 style='text-align: center; color: blue;'>Customize your Docy</h1>", unsafe_allow_html=True)
 
 
     # Debug Mode
     debug_mode_choice = st.radio("Debug mode (keep it False)", (False,True),horizontal=True)
     st.session_state['debug_mode'] = debug_mode_choice
+
+     # Demo Mode
+    debug_mode_choice = st.radio("Demo mode (Capability Mode)", (False,True),horizontal=True)
+    st.session_state['demo_mode'] = debug_mode_choice
+
+
     # Select the processor version [OpenSource, DocumentAI]
     processor_version = st.radio("Select the document loader", ( "OpenSource", "DocumentAI"),horizontal=True)
     st.session_state['processor_version'] = processor_version
@@ -72,7 +79,7 @@ with st.sidebar:
     vector_db = st.radio("Select the Vector DB", ( "Pandas", "Chroma", "FAISS","MatchingEngine"))
     st.session_state['vector_db'] = vector_db
     if st.session_state['vector_db'] == "FAISS" or st.session_state['vector_db'] == "MatchingEngine":
-        st.write("Coming Soon....")
+        st.write("Coming Soon....Select other Vector DB - Pandas or Chroma")
 
     # # Interface [TextGeneration API, Chat API]
     # interface = st.radio("Select the Interface", ( "TextGeneration API", "Chat API"),horizontal=True)
@@ -334,9 +341,9 @@ with st.container():
 
     else:
         # st.write(":red[Bada Bing Bada Boom].....Your need to :green[make your vector store] Groom . :brown[Upload document and Hit Processes]")
-        st.markdown("<h5 style='text-align: center; color: darkred;'>Bada Bing Bada Boom, You need to make the vector store GROOOM...Upload document and Hit Processes</h5>", unsafe_allow_html=True)
+        st.markdown("<h5 style='text-align: center; color: darkred;'>Bada Bing Bada Boom, You need to make the vector store GROOOM...Upload document and Hit Processes or use Demo Mode to see the capabilities of Docy.</h5>", unsafe_allow_html=True)
 
-    st.markdown("<h4 style='text-align: center; color: black;'>Backend Engine Details: :</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: center; color: black;'>Backend Engine Details:</h4>", unsafe_allow_html=True)
     st.write("Document Processor: ",f":red[{st.session_state['processor_version']}]")
     st.write("Vector DB: ", f":red[{st.session_state['vector_db']}]")
     st.write("Chunk Size: ", st.session_state['chunk_size'])
