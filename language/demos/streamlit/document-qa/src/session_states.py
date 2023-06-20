@@ -1,5 +1,11 @@
 import streamlit as st
 import pandas as pd 
+
+@st.cache_data()
+def get_predefined_vector_store():
+    return pd.read_pickle('./temp/vector_store_data_typedf_20230426_alphabet_10Q.pkl')
+
+
 def reset_session() -> None:
     """_summary_: Resets the session state to default values.
     """
@@ -8,7 +14,7 @@ def reset_session() -> None:
     st.session_state['vector_store_data_typedf'] = []
     st.session_state['processed_data_list'] = []
     st.session_state['file_upload_flag'] = False
-    st.session_state['processor_version'] = "OpenSource"
+    st.session_state['processor_version'] = "OpenSource(PyPDF2)"
     st.session_state['vector_db'] = "pandas"
     st.session_state['process_doc'] = False
     st.session_state['interface'] = "TextGeneration API"
@@ -40,7 +46,9 @@ def reset_session() -> None:
     st.session_state['focused_answer_explainer'] = ""
     st.session_state['focused_citation_df'] = pd.DataFrame()
     st.session_state['document_summary_mapreduce'] = ""
-    st.session_state['demo_mode'] = False
+    st.session_state['demo_mode'] = "DemoMode"
+    st.session_state['demo_mode_vector_store_data_typedf'] = get_predefined_vector_store()
+    st.session_state['vector_store_flag_demo'] = False
     
 def hard_reset_session() -> None: 
     st.session_state = {states : [] for states in st.session_state}
@@ -50,8 +58,15 @@ def create_session_state():
     """
     Creating session states for the app.
     """
+    if "demo_mode_vector_store_data_typedf" not in st.session_state:
+        st.session_state['demo_mode_vector_store_data_typedf'] = get_predefined_vector_store()
+    if 'vector_store_flag_demo' not in st.session_state:
+        if not st.session_state['demo_mode_vector_store_data_typedf'].empty:
+            st.session_state['vector_store_flag_demo'] = True
+        else:
+            st.session_state['vector_store_flag_demo'] = False
     if "demo_mode" not in st.session_state:
-        st.session_state['demo_mode'] = False
+        st.session_state['demo_mode'] = "DemoMode"
     if "document_summary_mapreduce" not in st.session_state:
         st.session_state['document_summary_mapreduce'] = ""
     if "focused_citation_df" not in st.session_state:
@@ -99,7 +114,7 @@ def create_session_state():
     if 'file_upload_flag' not in st.session_state:
         st.session_state['file_upload_flag'] = False
     if 'processor_version' not in st.session_state:
-        st.session_state['processor_version'] = "OpenSource"
+        st.session_state['processor_version'] = "OpenSource(PyPDF2)"
     if 'vector_db' not in st.session_state:
         st.session_state['vector_db'] = "pandas"
     if 'interface' not in st.session_state:

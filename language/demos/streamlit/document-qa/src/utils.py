@@ -66,13 +66,10 @@ def split_text(row):
     chunk_iter = get_chunks_iter(row, chunk_size)
     return chunk_iter
 
-def get_dot_product(row):
-    return np.dot(row, query_vector)
 
-
-def get_data_loading(documents, method:str = "OpenSource",
+def get_data_loading(documents, method:str = "OpenSource(PyPDF2)",
                      chunk_size_value:int=2000):
-    if method == "OpenSource":
+    if method == "OpenSource(PyPDF2)":
         final_data = []
         with st.spinner('Loading documents using PyPDF2 and `open` method....'):
             for eachdoc in documents:
@@ -122,6 +119,7 @@ def get_data_vectors(data:list, vector_db_choice:str = "Pandas"
                      ):
     if vector_db_choice == "Pandas":
         #Converting data to Pandas
+        # st.write(data[0])
         pdf_data = pd.DataFrame.from_dict(data)
         # st.write(pdf_data)
         pdf_data = pdf_data.sort_values(
@@ -146,6 +144,8 @@ def get_data_vectors(data:list, vector_db_choice:str = "Pandas"
         # st.write(pdf_data.head())
         st.session_state['vector_store_flag'] = True
         st.session_state['vector_store_data_typedf'] = pdf_data
+        #Storing vector store in pickle file for demo mode
+        # st.session_state['vector_store_data_typedf'].to_pickle("./temp/vector_store_data_typedf_20230426_alphabet_10Q.pkl")
         return st.session_state['vector_store_data_typedf']
     elif vector_db_choice == "Chroma":
         st.write("Chroma VectorDB.......")
@@ -157,11 +157,18 @@ def get_data_vectors(data:list, vector_db_choice:str = "Pandas"
             st.session_state['vector_store_data_chromadb_object'] = chroma_collection_object
             return st.session_state['vector_store_data_chromadb_object']
 
+def get_dot_product(row):
+    # st.write(type(row))
+    # st.write(type(query_vector))
+    return np.dot(row, query_vector)
+
 
 def get_filter_context_from_vectordb(vector_db_choice:str = "Pandas",
                                      question: str = "",
                                      sort_index_value:int = 3):
     if vector_db_choice == "Pandas" and st.session_state['vector_store_flag'] and not st.session_state['vector_store_data_typedf'].empty:
+        # st.write(st.session_state['vector_store_data_typedf'])
+        # st.write(st.session_state['vector_store_data_typedf'].dtypes)
         global query_vector
         query_vector = np.array(embedding_model_with_backoff([question]))
         top_matched_score = (
@@ -200,6 +207,29 @@ def get_filter_context_from_vectordb(vector_db_choice:str = "Pandas",
                 """
         
         return (context, top_matched_df,source)
+    elif vector_db_choice == "DemoMode" and st.session_state['vector_store_flag_demo'] and not st.session_state['demo_mode_vector_store_data_typedf'].empty:
+        # st.write(st.session_state['vector_store_data_typedf'])
+        # st.write(st.session_state['vector_store_data_typedf'].dtypes)
+        # global query_vector
+        st.session_state['demo_mode_vector_store_data_typedf']["embedding"] = st.session_state['demo_mode_vector_store_data_typedf'].embedding.apply(np.array)
+        query_vector = np.array(embedding_model_with_backoff([question]))
+        top_matched_score = (
+            st.session_state['demo_mode_vector_store_data_typedf']["embedding"]
+            .apply(get_dot_product)
+            .sort_values(ascending=False)[:sort_index_value]
+        )
+        top_matched_df = st.session_state['demo_mode_vector_store_data_typedf'][st.session_state['demo_mode_vector_store_data_typedf'].index.isin(top_matched_score.index)]
+        top_matched_df = top_matched_df[['file_name','page_number','chunk_number','content']]
+        top_matched_df['confidence_score'] = top_matched_score
+        top_matched_df.sort_values(by=['confidence_score'], ascending=False,inplace=True)
+        context = "\n".join(
+            st.session_state['demo_mode_vector_store_data_typedf'][st.session_state['demo_mode_vector_store_data_typedf'].index.isin(top_matched_score.index)]["content"].values
+        )
+        source = f"""filenames: {",".join(top_matched_df['file_name'].value_counts().index) },
+                pages: {top_matched_df['page_number'].unique()} , 
+                chunk: {top_matched_df['chunk_number'].unique()}
+                """
+        return (context, top_matched_df,source)
 
 # function to pass in the apply function on dataframe to extract answer for specific question on each row.
 def get_answer(df):
@@ -237,19 +267,23 @@ def get_focused_map_reduce_without_embedding(vector_db_choice:str = "Pandas",
                             for eachanswer in top_matched_df["predicted_answer"].values
                             if eachanswer.lower() != "answer not available in context"
                         ]
-    joined = ".".join(context_map_reduce)
-    context = get_text_generation(prompt=f"rewrite the text properly as a professional text with proper english: {joined}")
-    # st.write("context_map_reduce::::",context_map_reduce)
-    prompt = f"""Answer the question using the provided context. If the answer is
-                    not contained in the context, say "precise answers not available in context" \n\n
-                    Context: \n {context_map_reduce}?\n
-                    Question: \n {st.session_state['question']} \n
-                    Answer:
-                """
-    # print("the words in the prompt: ", len(prompt))
-    # print("PaLM Predicted:", generation_model.predict(prompt).text)
-    focused_answer = get_text_generation(prompt=prompt)
-    return focused_answer,context, top_matched_df
+    if context_map_reduce:
+        joined = ".".join(context_map_reduce)
+        context_new = get_text_generation(prompt=f"rewrite the text properly as a professional text with proper english: {joined}")
+        # st.write("context_map_reduce::::",context_map_reduce)
+        prompt = f"""Answer the question using the provided context. If the answer is
+                        not contained in the context, say "precise answers not available in context" \n\n
+                        Context: \n {context_new}?\n
+                        Question: \n {st.session_state['question']} \n
+                        Answer:
+                    """
+        # print("the words in the prompt: ", len(prompt))
+        # print("PaLM Predicted:", generation_model.predict(prompt).text)
+        focused_answer = get_text_generation(prompt=prompt)
+    else:
+        context_new = "Since nothing matched, no raw context available"
+        focused_answer = "precise answers not available in context"
+    return focused_answer,context_new, top_matched_df
     
 
 # Define a function to create a summary of the summaries
@@ -268,6 +302,9 @@ def reduce_summary(summary, prompt_template):
 
 def get_map_reduce_summary():
     if st.session_state['processed_data_list']:
+        if len(st.session_state['processed_data_list']) > 10:
+            st.session_state['processed_data_list'] = st.session_state['processed_data_list'][:10]
+
         initial_prompt_template = """
                                 Write a concise summary of the following text delimited by triple backquotes.
 
