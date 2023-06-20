@@ -66,22 +66,22 @@ with st.sidebar:
     st.session_state['debug_mode'] = debug_mode_choice
 
      # Demo Mode
-    demo_mode = st.radio("App mode:", ("DemoMode","AutoMode","AdvanceMode"))
+    demo_mode = st.radio("App mode:", ("Demo Mode","Auto Mode","Advanced Mode"))
     st.session_state['demo_mode'] = demo_mode
 
-    if st.session_state['demo_mode'] == "DemoMode":
+    if st.session_state['demo_mode'] == "Demo Mode":
         ## Load the predefined vector store from .temp folder 
-        st.write("You have selected DemoMode. We will use the predefined vector store.") 
+        st.write("You have selected Demo Mode. We will use the predefined vector store.") 
         # st.session_state['vector_store_data_typedf'] = st.session_state['demo_mode_vector_store_data_typedf'].copy()
         if not st.session_state['demo_mode_vector_store_data_typedf'].empty:
-            st.session_state['vector_db'] = "DemoMode"
+            st.session_state['vector_db'] = "Demo Mode"
             st.session_state['top_sort_value'] = 5
 
     
     else:
-        if st.session_state['demo_mode'] == "AutoMode":
+        if st.session_state['demo_mode'] == "Auto Mode":
             # st.session_state['vector_store_flag'] = False
-            st.write("You have selected AutoMode. We will use the default settings.")
+            st.write("You have selected Auto Mode. We will use the default settings.")
             st.session_state['processor_version'] = "OpenSource(PyPDF2)"
             st.session_state['vector_db'] = "Pandas"
             st.session_state['chunk_size'] = 2000
@@ -92,7 +92,7 @@ with st.sidebar:
             st.write("Chunk Size: ", st.session_state['chunk_size'])
             st.write("Top N results: ", st.session_state['top_sort_value'])
 
-        elif st.session_state['demo_mode'] == "AdvanceMode":
+        elif st.session_state['demo_mode'] == "Advanced Mode":
             # st.session_state['vector_store_flag'] = False
             # Select the processor version [OpenSource(PyPDF2), DocumentAI]
             processor_version = st.radio("Select the Document Processor", ( "OpenSource(PyPDF2)", "DocumentAI"),horizontal=True)
@@ -174,7 +174,14 @@ with st.container():
         except IndexError:
             st.write("IndexError: No data to display, upload the documents and process it. Or Reset Session.")
 
-    if st.session_state['vector_store_flag'] or st.session_state['vector_store_flag_demo']:
+    if st.session_state['demo_mode'] == "Demo Mode":
+        st.markdown( """<a style='display: block; text-align: center;' href="https://abc.xyz/investor/static/pdf/20230426_alphabet_10Q.pdf">Check the source of indexed document</a>""",
+                                unsafe_allow_html=True,
+                                )
+
+
+
+    if (st.session_state['vector_store_flag'] and st.session_state['demo_mode'] != "Demo Mode")  or (st.session_state['vector_store_flag_demo'] and st.session_state['demo_mode'] == "Demo Mode"):
         
         question = st.text_input('What would you like to ask the documents?')
         st.session_state['question'] = question
@@ -188,7 +195,7 @@ with st.container():
                 context, top_matched_df, source = get_filter_context_from_vectordb(vector_db_choice = st.session_state['vector_db'],
                                      question = st.session_state['question'],
                                      sort_index_value =  st.session_state['top_sort_value'])
-            elif st.session_state['vector_db'] == "DemoMode":
+            elif st.session_state['vector_db'] == "Demo Mode":
                 context, top_matched_df, source = get_filter_context_from_vectordb(vector_db_choice = st.session_state['vector_db'],
                                      question = st.session_state['question'],
                                      sort_index_value =  st.session_state['top_sort_value'])
@@ -256,7 +263,7 @@ with st.container():
         # st.write(":red[Bada Bing Bada Boom].....Your need to :green[make your vector store] Groom . :brown[Upload document and Hit Processes]")
         st.markdown("<h5 style='text-align: center; color: darkred;'>Bada Bing Bada Boom, You need to make the vector store GROOOM...Upload document and Hit Processes or use Demo Mode to see the capabilities of Docy.</h5>", unsafe_allow_html=True)
 
-    if st.session_state['demo_mode'] != "DemoMode":
+    if st.session_state['demo_mode'] != "Demo Mode":
         st.markdown("<h4 style='text-align: center; color: black;'>Backend Engine Details:</h4>", unsafe_allow_html=True)
         st.write("Document Processor: ",f":red[{st.session_state['processor_version']}]")
         st.write("Vector DB: ", f":red[{st.session_state['vector_db']}]")

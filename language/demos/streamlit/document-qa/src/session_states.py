@@ -66,7 +66,7 @@ def create_session_state():
         else:
             st.session_state['vector_store_flag_demo'] = False
     if "demo_mode" not in st.session_state:
-        st.session_state['demo_mode'] = "DemoMode"
+        st.session_state['demo_mode'] = "Demo Mode"
     if "document_summary_mapreduce" not in st.session_state:
         st.session_state['document_summary_mapreduce'] = ""
     if "focused_citation_df" not in st.session_state:

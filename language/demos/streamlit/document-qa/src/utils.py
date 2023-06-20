@@ -207,7 +207,7 @@ def get_filter_context_from_vectordb(vector_db_choice:str = "Pandas",
                 """
         
         return (context, top_matched_df,source)
-    elif vector_db_choice == "DemoMode" and st.session_state['vector_store_flag_demo'] and not st.session_state['demo_mode_vector_store_data_typedf'].empty:
+    elif vector_db_choice == "Demo Mode" and st.session_state['vector_store_flag_demo'] and not st.session_state['demo_mode_vector_store_data_typedf'].empty:
         # st.write(st.session_state['vector_store_data_typedf'])
         # st.write(st.session_state['vector_store_data_typedf'].dtypes)
         # global query_vector
