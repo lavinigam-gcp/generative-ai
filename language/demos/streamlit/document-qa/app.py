@@ -61,9 +61,9 @@ with st.sidebar:
     st.markdown("<h1 style='text-align: center; color: blue;'>Customize your Docy</h1>", unsafe_allow_html=True)
 
 
-    # Debug Mode
-    debug_mode_choice = st.radio("Debug mode (keep it False)", (False,True),horizontal=True)
-    st.session_state['debug_mode'] = debug_mode_choice
+    # # Debug Mode
+    # debug_mode_choice = st.radio("Debug mode (keep it False)", (False,True),horizontal=True)
+    # st.session_state['debug_mode'] = debug_mode_choice
 
      # Demo Mode
     demo_mode = st.radio("App mode:", ("Demo Mode","Auto Mode","Advanced Mode"))
@@ -183,8 +183,13 @@ with st.container():
 
     if (st.session_state['vector_store_flag'] and st.session_state['demo_mode'] != "Demo Mode")  or (st.session_state['vector_store_flag_demo'] and st.session_state['demo_mode'] == "Demo Mode"):
         
-        question = st.text_input('What would you like to ask the documents?')
-        st.session_state['question'] = question
+        tab1, tab2 = st.tabs(["AskDocy", "DocyChat"])
+        with tab1: 
+            question = st.text_input('What would you like to ask the documents?')
+            st.session_state['question'] = question
+        with tab2:
+            tab_source.get_askdocy_for_tab()
+
         # get the custom relevant chunks from all the chunks in vector store.
         if question:
             if st.session_state['vector_db'] == "Pandas":
@@ -208,7 +213,7 @@ with st.container():
                 #Extracted Answer and Insights Block: 
                 st.markdown("<h3 style='text-align: center; color: black;'>Extracted Answers and Insights</h3>", unsafe_allow_html=True)
                 # st.write("Here's the answer from document: ")
-                tab1, tab2, tab3, tab4, tab5 = st.tabs(["Grounded", "Focused","PaLMReImagine","Evaluation","AskDocy"])
+                tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Grounded", "Focused","PaLMReImagine","Evaluation","AskDocy","DocyChat"])
                 with tab1:
                     tab_source.get_grounded_answer_for_tab(question=question, context=st.session_state['vector_db_context'])
                 with tab2:
@@ -217,8 +222,11 @@ with st.container():
                     tab_source.get_palmreimagine_answer_for_tab(answer=st.session_state['answer'])
                 with tab4:
                     tab_source.get_evaluation_for_tab()
-                with tab5:
-                    tab_source.get_chat_for_tab()
+                # with tab5:
+                #     # tab_source.get_chat_for_tab()
+                #     st.write("Coming Soon")
+                # with tab6: 
+                #     # tab_source.get_askdocy_for_tab()
                     
 
                 #Sources & Citation Block:
@@ -234,27 +242,29 @@ with st.container():
                 
                 #Summary Block: 
                 st.markdown("<h4 style='text-align: center; color: black;'>Summary</h4>", unsafe_allow_html=True)
-                tab1, tab2, tab3 = st.tabs(["Source Summary", "Document Summary","PaLMContext" ])
-                with tab1: 
-                    prompt = f"""Write a concise summary of the following text delimited by triple backquotes.
-                                    Return your response in bullet points which covers the key points of the text.
+                tab1, tab2= st.tabs(["Source Summary", "Document Summary"])
+                with tab1:
+                    st.write("Create summary for the context sent to PaLM for your question")
+                    if st.button("Generate Context Summary"):
+                        prompt = f"""Write a concise summary of the following text delimited by triple backquotes.
+                                        Return your response in bullet points which covers the key points of the text.
 
-                                ```{st.session_state['vector_db_context']}```
+                                    ```{st.session_state['vector_db_context']}```
 
-                                BULLET POINT SUMMARY: \n 
-                                """
-                    st.write(get_text_generation(prompt=prompt))
+                                    BULLET POINT SUMMARY: \n 
+                                    """
+                        st.write(get_text_generation(prompt=prompt))
+                    if st.button("Show the raw context sent to PaLM"):
+                        st.write(st.session_state['vector_db_context'])
                 with tab2: 
                     st.write("Using Map Reduce Summary Chain Method:")
                     st.write("Currently we are using the first 10 chunks of the document to generate the summary.")
-                    if st.session_state['document_summary_mapreduce']:
-                       st.write(st.session_state['document_summary_mapreduce'])
-                    else:
-                        st.write("Summary of the document not available.")
+                    if st.button("Generate Document Summary"):
+                        if st.session_state['document_summary_mapreduce']:
+                            st.write(st.session_state['document_summary_mapreduce'])
+                        else:
+                            st.write("Summary of the document not available.")
 
-                with tab3: 
-                    st.write("Here's verbatim of what we are sending to PaLM as context to answer your query: ")
-                    st.write(st.session_state['vector_db_context'])
             else: 
                 st.write("Sorry we couldn't find anything around your query in the database, maybe try a different question?")
         

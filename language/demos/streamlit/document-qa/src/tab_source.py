@@ -68,10 +68,66 @@ def get_focused_answer_for_tab(question:str,vector_db_choice:str):
         st.write(st.session_state['focused_answer'])
         st.write(":green[Focused Answer Explainer]")
         st.write(st.session_state['focused_answer_explainer'])
-        if st.button("Summarize the answer?"):
+        if st.button("Summarize the focused answer?"):
             st.write(":green[Here's the bullet point summary of the Focused answer]")
             st.markdown(get_summary_for_answer_tab(answer = st.session_state['focused_answer_explainer']))
 
+def clear_chat() -> None:
+    st.session_state['chat_model'] = ""
+    st.session_state['generated'] = []
+    st.session_state['past'] = []
+    st.session_state['context'] = ""
+    st.session_state['example'] = []
+    st.session_state['temperature'] = []
+
+
+def get_askdocy_for_tab():
+    if st.button("Clear Chat"):
+        clear_chat()
+    # if st.button("Create your chat session"):
+    user_input = st.text_input('Your message to the Docy:', key='chat_widget', on_change=chat_input_submit)
+    if st.session_state.chat_input:
+            context, top_matched_df, source = get_filter_context_from_vectordb(vector_db_choice = st.session_state['vector_db'],
+                                    question = st.session_state.chat_input,
+                                    sort_index_value =  st.session_state['top_sort_value'])
+            final_context = f"""
+            Your name is Docy and you have been built on PaLM2. Your soul purpose is to be the best buddy to enterprise.
+            You do not respond with any other name. You are very funny when responding and people should feel they are talking to human. 
+            Your goal involves answering question based on the provided context as {{context:}}. You do not answer anything beside that. 
+            Your expertise is only on the context and anything outside of it should be responded politely saying that you can not respond to anything outside of context. \n
+            context: {context}
+            """
+            chat_model = create_session(temperature = 0.1,
+                                                context= final_context
+                                                )
+            st.session_state['chat_model'] = chat_model
+            with st.spinner('PaLM is working to respond back, wait.....'):
+                try:
+                    bot_message = response(st.session_state['chat_model'], st.session_state.chat_input)
+        
+                    #store the output
+                    if len(st.session_state['past'])>0:
+                        if st.session_state['past'][-1] != st.session_state.chat_input:
+                            st.session_state['past'].append(st.session_state.chat_input)
+                            st.session_state['generated'].append(bot_message)
+                    else:
+                        st.session_state['past'].append(st.session_state.chat_input)
+                        st.session_state['generated'].append(bot_message)
+
+                except AttributeError:
+                    st.write("You have not created the chat session,click on 'Create your chat session'")
+
+            #display generated response 
+            if st.session_state['generated'] and st.session_state['past']:
+                for i in range(len(st.session_state["generated"])-1,-1,-1):
+                    message(st.session_state['past'][i], is_user=True, key=str(i) + '_user', avatar_style='big-smile')
+                    message(st.session_state["generated"][i], key=str(i), avatar_style='bottts')
+
+            if st.session_state['debug_mode']:
+                st.write("len of generated response: ",len(st.session_state["generated"]))
+                st.write(f'Last mssage to bot: {st.session_state.chat_input}')
+                st.write(st.session_state)
+                st.write("len of past response: ",len(st.session_state["past"]))    
 
 def get_chat_for_tab():
     if st.button("Clear Chat"):
