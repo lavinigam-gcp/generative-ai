@@ -39,8 +39,10 @@ def get_palmreimagine_answer_for_tab(answer:str):
             st.write(st.session_state['rewritten_answer'])
 
 def get_grounded_answer_for_tab(question:str,context:str):
-    st.write(":red[This uses Map Reduce Chains with Embedding]")
-    prompt = f""" Answer the question as precise as possible using the provided context. \n\n
+    # st.write(":red[This uses Map Reduce Chains with Embedding]")
+    # given in {{context:}}. 
+    #  Do not provide answers outside of the context. Do not add anything on your own when answering.
+    prompt = f""" Answer the question as precise as possible using the provided context   \n\n
         Context: \n {context}?\n
         Question: \n {question} \n
         Answer:
@@ -48,12 +50,13 @@ def get_grounded_answer_for_tab(question:str,context:str):
     answer = get_text_generation(prompt=prompt,temperature=0.0,max_output_tokens=1024)
     st.session_state['answer'] = answer
     st.write(st.session_state['answer'])
-    if st.button("Summarize the answer?"):
-        st.write(":green[Here's the bullet point summary of the answer]")
-        st.markdown(get_summary_for_answer_tab(answer = st.session_state['answer']))
+    if st.session_state['demo_mode'] != "Demo Mode":
+        if st.button("Summarize the answer?"):
+            st.write(":green[Here's the bullet point summary of the answer]")
+            st.markdown(get_summary_for_answer_tab(answer = st.session_state['answer']))
 
 def get_focused_answer_for_tab(question:str,vector_db_choice:str):
-    st.write(":red[This uses focused Map Reduce Chains and finds answer in each relevant chunk]")
+    # st.write(":red[This uses focused Map Reduce Chains and finds answer in each relevant chunk]")
 
     if st.button("Get more focused answer"):
 
@@ -80,6 +83,11 @@ def clear_chat() -> None:
     st.session_state['example'] = []
     st.session_state['temperature'] = []
 
+def get_previous_question_answer_pairs(answer_pairs, question_pair):
+    pairs = []
+    for i in range(len(answer_pairs)):
+        pairs.append(f"""previous_question: {question_pair[i]} \nprevious_answer:  {answer_pairs[i]}  \n""")
+    return "\n".join(pairs)
 
 def get_askdocy_for_tab():
     if st.button("Clear Chat"):
@@ -88,15 +96,52 @@ def get_askdocy_for_tab():
     user_input = st.text_input('Your message to the Docy:', key='chat_widget', on_change=chat_input_submit)
     if st.session_state.chat_input:
             context, top_matched_df, source = get_filter_context_from_vectordb(vector_db_choice = st.session_state['vector_db'],
-                                    question = st.session_state.chat_input,
-                                    sort_index_value =  st.session_state['top_sort_value'])
-            final_context = f"""
-            Your name is Docy and you have been built on PaLM2. Your soul purpose is to be the best buddy to enterprise.
-            You do not respond with any other name. You are very funny when responding and people should feel they are talking to human. 
-            Your goal involves answering question based on the provided context as {{context:}}. You do not answer anything beside that. 
-            Your expertise is only on the context and anything outside of it should be responded politely saying that you can not respond to anything outside of context. \n
-            context: {context}
-            """
+                                        question = st.session_state.chat_input,
+                                        sort_index_value =  2)
+            if st.session_state['past'] and st.session_state['generated']:
+                # previous_question: {st.session_state['past'][-5:]} \n
+                # previous_answer:  {st.session_state['generated'][-5:]} \n
+                if len(st.session_state['generated']) >= 5:
+                    final_context = f"""
+                    Your name is Docy and you have been built on PaLM2. You do not respond with any other name. 
+                    Your goal involves answering question based on the provided context as {{context:}} and previous question and answers provided as as {{previous_question:}} and {{previous_answer}}. 
+                    You do not answer anything beside that. If something is asked beyond that, say "Sorry, this is not part of my context and i can not answer it. 
+                    You should also keep the context of the previous conversation and respond based on that by keeping the memory of it while responding to the current question. 
+                    \n\n
+                    {get_previous_question_answer_pairs(answer_pairs=st.session_state['generated'][-5:], 
+                                                    question_pair=st.session_state['past'][-5:] )
+                                                    }
+                    context: {context} \n\n
+                    """
+                else:
+                    # previous_question: {st.session_state['past'][-len(st.session_state['generated']):]} \n
+                    # previous_answer:  {st.session_state['generated'][-len(st.session_state['generated']):]} \n
+                    final_context = f"""
+                    Your name is Docy and you have been built on PaLM2. You do not respond with any other name. 
+                    Your goal involves answering question based on the provided context as {{context:}} and previous question and answers provided as as {{previous_question:}} and {{previous_answer}}. 
+                    You do not answer anything beside that. If something is asked beyond that, say "Sorry, this is not part of my context and i can not answer it. 
+                    You should also keep the context of the previous conversation and respond based on that by keeping the memory of it while responding to the current question. 
+                    \n\n
+                    {get_previous_question_answer_pairs(answer_pairs=st.session_state['generated'][-5:], 
+                                                    question_pair=st.session_state['generated'][-5:] )
+                                                    }
+                                                    
+                    context: {context} \n\n
+                    """
+
+            else:
+                final_context = f"""
+                Your name is Docy and you have been built on PaLM2.
+                You do not respond with any other name. 
+                Your goal involves answering question based on the provided context as {{context:}}. You do not answer anything beside that. 
+                You should also keep the context of the previous conversation and respond based on that by keeping the memory of it while responding to the current question. 
+                its available as {{previous_question:}} and {{previous_answer}} \n\n
+                previous_question:  \n
+                previous_answer:  \n
+                context: {context} \n\n
+                """
+
+            # st.write("heres the context going to bot: ",final_context)
             chat_model = create_session(temperature = 0.1,
                                                 context= final_context
                                                 )
@@ -141,8 +186,13 @@ def get_chat_for_tab():
             You do not respond with any other name. You are very funny when responding and people should feel they are talking to human. 
             Your goal involves answering question based on the provided context as {{context:}}. You do not answer anything beside that. 
             Your expertise is only on the context and anything outside of it should be responded politely saying that you can not respond to anything outside of context. \n
-            context: {combined_input_context}
+            You should also keep the context of the previous conversation and respond based on that by keeping the memory of it while responding to the current question. 
+            its available as {{previous_question:}} and {{previous_answer}} \n
+            context: {combined_input_context} \n\n
+            previous_question: {st.session_state['past'][-1]}
+            previous_answer:  {st.session_state['generated'][-1]}
             """
+            st.write("heres the context going to bot: ",final_context)
             chat_model = create_session(temperature = 0.1,
                                                 context= final_context
                                                 )

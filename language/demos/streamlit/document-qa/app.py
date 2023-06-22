@@ -44,13 +44,16 @@ def get_image_displayed(path):
 def change_file_upload_flag():
     st.session_state['file_upload_flag'] = False
 
+def question_query_input_submit():
+    st.session_state['question'] = st.session_state.question_input
+    st.session_state.question_input = ''
 
 # './image/palm.jpg'
 #Page Header Image and Text
 # image = Image.open('./image/palm.jpg')
 # st.image(image)
 get_image_displayed(path='./image/palm.jpg')
-st.markdown("<h1 style='text-align: center; color: darkgreen;'>DOCY - Enterprise Search with PaLM</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: darkgreen;'>DOCY - Document Q&A with Vertex PaLM API</h1>", unsafe_allow_html=True)
 
 # Left side of APP. 
 #Sidebar 
@@ -66,33 +69,30 @@ with st.sidebar:
     # st.session_state['debug_mode'] = debug_mode_choice
 
      # Demo Mode
-    demo_mode = st.radio("App mode:", ("Demo Mode","Auto Mode","Advanced Mode"))
+    demo_mode = st.radio("App mode:", ("Demo Mode","Advanced Mode"))
     st.session_state['demo_mode'] = demo_mode
 
     if st.session_state['demo_mode'] == "Demo Mode":
         ## Load the predefined vector store from .temp folder 
         st.write("You have selected Demo Mode. We will use the predefined vector store.") 
         # st.session_state['vector_store_data_typedf'] = st.session_state['demo_mode_vector_store_data_typedf'].copy()
-        if not st.session_state['demo_mode_vector_store_data_typedf'].empty:
-            st.session_state['vector_db'] = "Demo Mode"
-            st.session_state['top_sort_value'] = 5
 
     
     else:
-        if st.session_state['demo_mode'] == "Auto Mode":
-            # st.session_state['vector_store_flag'] = False
-            st.write("You have selected Auto Mode. We will use the default settings.")
-            st.session_state['processor_version'] = "OpenSource(PyPDF2)"
-            st.session_state['vector_db'] = "Pandas"
-            st.session_state['chunk_size'] = 2000
-            st.session_state['top_sort_value'] = 3
-            st.write("The default settings are:")
-            st.write("Document Processor: ", st.session_state['processor_version'])
-            st.write("Vector DB: ", st.session_state['vector_db'])
-            st.write("Chunk Size: ", st.session_state['chunk_size'])
-            st.write("Top N results: ", st.session_state['top_sort_value'])
+        # if st.session_state['demo_mode'] == "Auto Mode":
+        #     # st.session_state['vector_store_flag'] = False
+        #     st.write("You have selected Auto Mode. We will use the default settings.")
+        #     st.session_state['processor_version'] = "OpenSource(PyPDF2)"
+        #     st.session_state['vector_db'] = "Pandas"
+        #     st.session_state['chunk_size'] = 2000
+        #     st.session_state['top_sort_value'] = 3
+        #     st.write("The default settings are:")
+        #     st.write("Document Processor: ", st.session_state['processor_version'])
+        #     st.write("Vector DB: ", st.session_state['vector_db'])
+        #     st.write("Chunk Size: ", st.session_state['chunk_size'])
+        #     st.write("Top N results: ", st.session_state['top_sort_value'])
 
-        elif st.session_state['demo_mode'] == "Advanced Mode":
+        if st.session_state['demo_mode'] == "Advanced Mode":
             # st.session_state['vector_store_flag'] = False
             # Select the processor version [OpenSource(PyPDF2), DocumentAI]
             processor_version = st.radio("Select the Document Processor", ( "OpenSource(PyPDF2)", "DocumentAI"),horizontal=True)
@@ -105,7 +105,7 @@ with st.sidebar:
             vector_db = st.radio("Select the Vector DB", ( "Pandas", "Chroma"))
             st.session_state['vector_db'] = vector_db
             # Selecting the chunk size
-            chunk_size_value = st.number_input("Chunk Size:",value=500,min_value=200, max_value=10000,step=200)
+            chunk_size_value = st.number_input("Chunk Size:",value=2000,min_value=200, max_value=10000,step=200)
             st.session_state['chunk_size'] = chunk_size_value
             # Select Top N results
             top_match_result_value = st.number_input("How many result to pick?",value=3)
@@ -175,10 +175,69 @@ with st.container():
             st.write("IndexError: No data to display, upload the documents and process it. Or Reset Session.")
 
     if st.session_state['demo_mode'] == "Demo Mode":
-        st.markdown( """<a style='display: block; text-align: center;' href="https://abc.xyz/investor/static/pdf/20230426_alphabet_10Q.pdf">Check the source of indexed document</a>""",
-                                unsafe_allow_html=True,
-                                )
 
+        if st.session_state['demo_mode_vector_store_data_typedf']:
+            st.session_state['vector_db'] = "Demo Mode"
+            st.session_state['top_sort_value'] = 5
+        document_choice = st.radio("Select the Document", ( "HR Policy", "Rent Agreement" ,"Health Insurance Policy", "Quarterly Earnings Report", "Bylaw"),horizontal=True)
+        st.session_state['demo_mode_dataset_selection'] = document_choice
+        if document_choice == "HR Policy":
+            url = "https://hr.karvy.com/HRpolicies/HR_Policy_Manual_KFSLnew.pdf"
+            st.markdown(f"""<a style='display: block; text-align: center; color: red;' href={url}>View Document</a>""",
+                                    unsafe_allow_html=True,
+                                    )
+            st.write("Sample questions to ask: ")
+            st.write("1. What are the interviewing guidelines?")
+            st.write("2. What documents are required at the time of joining?")
+            st.write("3. What is the cellphone usage policy? What are the limits for monthly reimbursement by level?")
+            st.write("4. What are the conditions in which Gratuity is not paid. Please list them as individual points.")
+            st.write("5. When is performance appraisal done in the company? What are the different ratings for any KRA?")
+        elif document_choice == "Rent Agreement":
+            url = "https://assets1.cleartax-cdn.com/cleartax/images/1655708276_rentalagreementsampleandallyouneedtoknow.pdf"
+            st.markdown(f"""<a style='display: block; text-align: center; color: red;' href={url}>View Document</a>""",
+                                    unsafe_allow_html=True,
+                                    )
+            st.write("Sample questions to ask: ")
+            st.write("1. What if there is a dispute in this agreement?")
+            st.write("2. What is the notice period needed if one has to terminate this agreement?")
+            st.write("3. If minor repairs need to be done, who is responsible for it? And what about major repairs?")
+            st.write("4. Can the owner use this property for any purpose other than residing there? What is not allowed?")
+            st.write("5. Under what conditions can the owner visit in person?")
+
+        elif document_choice == "Health Insurance Policy":
+            url = "https://nationalinsurance.nic.co.in/sites/default/files/1.%20Policy-%20NMP.pdf"
+            st.markdown(f"""<a style='display: block; text-align: center; color: red;' href={url}>View Document</a>""",
+                                    unsafe_allow_html=True,
+                                    )
+            st.write("Sample questions to ask: ")
+            st.write("1. What are the systems of medicine supported?")
+            st.write("2. What are the various discounts provided? Can you provide more information on the Online payment discount?")
+            st.write("3. What are the contact details for the insurance person in Karnataka?")
+            st.write("4. What are the time limits for submission of the claim documents?")
+            st.write("5. What operations are included in the area of tonsils and adenoids?")
+        
+        elif document_choice == "Quarterly Earnings Report":
+            url = "hhttps://abc.xyz/investor/static/pdf/2023Q1_alphabet_earnings_release.pdf"
+            st.markdown(f"""<a style='display: block; text-align: center; color: red;' href={url}>View Document</a>""",
+                                    unsafe_allow_html=True,
+                                    )
+            st.write("Sample questions to ask: ")
+            st.write("1. What was the cost of reduction in workforce?")
+            st.write("2. What is the total workforce in March 2023? How does it compare to that in March 2022? What does it mean in terms of percentage increase in employees?")
+            st.write("3. Operating income loss is being reported for the Quarters ending 2022 and 2023. What are the groups under which it's reported? How did Cloud do in terms of business?")
+            st.write("4. What was the total income from operations for quarter ending in March 31, 2023?")
+            st.write("5. What is the total revenue for the quarter ending March 31, 2023? How much of a percentage increase or decrease over the same period last year?")
+        elif document_choice == "Bylaw":
+            url = "https://www.imf.org/external/pubs/ft/bl/pdf/by-laws.pdf"
+            st.markdown(f"""<a style='display: block; text-align: center; color: red;' href={url}>View Document</a>""",
+                                    unsafe_allow_html=True,
+                                    )
+            st.write("Sample questions to ask: ")
+            st.write("1. What are the laws around proxy voting?")
+            st.write("2. What happens when there is a vacancy for a Director?")
+            st.write("3. What is the working language of the fund?")
+            st.write("4. Who has certified this document?")
+            st.write("5. What is section O-7?")
 
 
     if (st.session_state['vector_store_flag'] and st.session_state['demo_mode'] != "Demo Mode")  or (st.session_state['vector_store_flag_demo'] and st.session_state['demo_mode'] == "Demo Mode"):
@@ -186,6 +245,7 @@ with st.container():
         tab1, tab2 = st.tabs(["AskDocy", "DocyChat"])
         with tab1: 
             question = st.text_input('What would you like to ask the documents?')
+                                    #  ,key = "question_input", on_change=question_query_input_submit)
             st.session_state['question'] = question
         with tab2:
             tab_source.get_askdocy_for_tab()
@@ -201,11 +261,12 @@ with st.container():
                                      question = st.session_state['question'],
                                      sort_index_value =  st.session_state['top_sort_value'])
             elif st.session_state['vector_db'] == "Demo Mode":
+                # st.write("I AMMMMM HERE...............")
                 context, top_matched_df, source = get_filter_context_from_vectordb(vector_db_choice = st.session_state['vector_db'],
                                      question = st.session_state['question'],
-                                     sort_index_value =  st.session_state['top_sort_value'])
+                                     sort_index_value =  3)
                 
-            if not top_matched_df.empty: 
+            if not top_matched_df.empty and st.session_state['demo_mode'] != "Demo Mode": 
                 st.session_state['vector_db_context'] =  context
                 st.session_state['vector_db_matched_db'] = top_matched_df
                 st.session_state['vector_db_source'] = source
@@ -213,7 +274,7 @@ with st.container():
                 #Extracted Answer and Insights Block: 
                 st.markdown("<h3 style='text-align: center; color: black;'>Extracted Answers and Insights</h3>", unsafe_allow_html=True)
                 # st.write("Here's the answer from document: ")
-                tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Grounded", "Focused","PaLMReImagine","Evaluation","AskDocy","DocyChat"])
+                tab1, tab2, tab3, tab4= st.tabs(["Grounded", "Focused","PaLMReImagine","Evaluation"])
                 with tab1:
                     tab_source.get_grounded_answer_for_tab(question=question, context=st.session_state['vector_db_context'])
                 with tab2:
@@ -264,12 +325,23 @@ with st.container():
                             st.write(st.session_state['document_summary_mapreduce'])
                         else:
                             st.write("Summary of the document not available.")
+            elif st.session_state['demo_mode'] == "Demo Mode":
+                st.write(":red[You have selected this document for demo mode: ]",st.session_state['demo_mode_dataset_selection'])
+                #Extracted Answer and Insights Block: 
+                st.markdown("<h5 style='text-align: left; color: black;'>Extracted Answers</h5>", unsafe_allow_html=True)
+                tab_source.get_grounded_answer_for_tab(question=question, context=context)
 
+                #Sources & Citation Block:
+                st.markdown("<h5 style='text-align: left; color: black;'>Citations</h5>", unsafe_allow_html=True)
+                with st.expander("Check Citations:"):
+                    st.dataframe(top_matched_df)
+            
+                
             else: 
                 st.write("Sorry we couldn't find anything around your query in the database, maybe try a different question?")
         
 
-    else:
+    elif st.session_state['demo_mode'] != "Demo Mode":
         # st.write(":red[Bada Bing Bada Boom].....Your need to :green[make your vector store] Groom . :brown[Upload document and Hit Processes]")
         st.markdown("<h5 style='text-align: center; color: darkred;'>Bada Bing Bada Boom, You need to make the vector store GROOOM...Upload document and Hit Processes or use Demo Mode to see the capabilities of Docy.</h5>", unsafe_allow_html=True)
 

@@ -145,7 +145,7 @@ def get_data_vectors(data:list, vector_db_choice:str = "Pandas"
         st.session_state['vector_store_flag'] = True
         st.session_state['vector_store_data_typedf'] = pdf_data
         #Storing vector store in pickle file for demo mode
-        # st.session_state['vector_store_data_typedf'].to_pickle("./temp/vector_store_data_typedf_20230426_alphabet_10Q.pkl")
+        # st.session_state['vector_store_data_typedf'].to_pickle("./temp/vector_store_data_typedf_insurance_policy.pkl")
         return st.session_state['vector_store_data_typedf']
     elif vector_db_choice == "Chroma":
         st.write("Chroma VectorDB.......")
@@ -158,9 +158,11 @@ def get_data_vectors(data:list, vector_db_choice:str = "Pandas"
             return st.session_state['vector_store_data_chromadb_object']
 
 def get_dot_product(row):
-    # st.write(type(row))
-    # st.write(type(query_vector))
-    return np.dot(row, query_vector)
+    return np.dot(row, st.session_state['query_vectors'])
+
+
+def get_demo_dataset_selection_df(document_choice:str ="HR Policy"):
+    return st.session_state['demo_mode_vector_store_data_typedf'][document_choice]
 
 
 def get_filter_context_from_vectordb(vector_db_choice:str = "Pandas",
@@ -169,8 +171,7 @@ def get_filter_context_from_vectordb(vector_db_choice:str = "Pandas",
     if vector_db_choice == "Pandas" and st.session_state['vector_store_flag'] and not st.session_state['vector_store_data_typedf'].empty:
         # st.write(st.session_state['vector_store_data_typedf'])
         # st.write(st.session_state['vector_store_data_typedf'].dtypes)
-        global query_vector
-        query_vector = np.array(embedding_model_with_backoff([question]))
+        st.session_state['query_vectors'] = np.array(embedding_model_with_backoff([question]))
         top_matched_score = (
             st.session_state['vector_store_data_typedf']["embedding"]
             .apply(get_dot_product)
@@ -207,29 +208,43 @@ def get_filter_context_from_vectordb(vector_db_choice:str = "Pandas",
                 """
         
         return (context, top_matched_df,source)
-    elif vector_db_choice == "Demo Mode" and st.session_state['vector_store_flag_demo'] and not st.session_state['demo_mode_vector_store_data_typedf'].empty:
+    elif vector_db_choice == "Demo Mode" and st.session_state['vector_store_flag_demo']:
         # st.write(st.session_state['vector_store_data_typedf'])
         # st.write(st.session_state['vector_store_data_typedf'].dtypes)
         # global query_vector
-        st.session_state['demo_mode_vector_store_data_typedf']["embedding"] = st.session_state['demo_mode_vector_store_data_typedf'].embedding.apply(np.array)
-        query_vector = np.array(embedding_model_with_backoff([question]))
+        
+        choice_dict ={
+                    "HR Policy" : "hr_policy",
+                    "Rent Agreement": "rent_agreement",
+                    "Health Insurance Policy": "health_insurance_policy",
+                    "Bylaw": "company_bylaw",
+                    "Quarterly Earnings Report": "quaterly_earning_report"
+                }
+        document_choice_final = choice_dict[st.session_state['demo_mode_dataset_selection']]
+        subset_df = get_demo_dataset_selection_df(document_choice = document_choice_final)
+
+        
+        st.session_state['query_vectors'] = np.array(embedding_model_with_backoff([question]))
+        # global query_vector
+
         top_matched_score = (
-            st.session_state['demo_mode_vector_store_data_typedf']["embedding"]
+            subset_df["embedding"]
             .apply(get_dot_product)
             .sort_values(ascending=False)[:sort_index_value]
         )
-        top_matched_df = st.session_state['demo_mode_vector_store_data_typedf'][st.session_state['demo_mode_vector_store_data_typedf'].index.isin(top_matched_score.index)]
+        top_matched_df = subset_df[subset_df.index.isin(top_matched_score.index)]
         top_matched_df = top_matched_df[['file_name','page_number','chunk_number','content']]
         top_matched_df['confidence_score'] = top_matched_score
         top_matched_df.sort_values(by=['confidence_score'], ascending=False,inplace=True)
         context = "\n".join(
-            st.session_state['demo_mode_vector_store_data_typedf'][st.session_state['demo_mode_vector_store_data_typedf'].index.isin(top_matched_score.index)]["content"].values
+            subset_df[subset_df.index.isin(top_matched_score.index)]["content"].values
         )
         source = f"""filenames: {",".join(top_matched_df['file_name'].value_counts().index) },
                 pages: {top_matched_df['page_number'].unique()} , 
                 chunk: {top_matched_df['chunk_number'].unique()}
                 """
         return (context, top_matched_df,source)
+
 
 # function to pass in the apply function on dataframe to extract answer for specific question on each row.
 def get_answer(df):

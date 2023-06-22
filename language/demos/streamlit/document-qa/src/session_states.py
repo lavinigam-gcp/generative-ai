@@ -3,7 +3,16 @@ import pandas as pd
 
 @st.cache_data()
 def get_predefined_vector_store():
-    return pd.read_pickle('./temp/vector_store_data_typedf_20230426_alphabet_10Q.pkl')
+    demo_data = {}
+    demo_data['quaterly_earning_report'] = pd.read_pickle('./temp/vector_store_data_typedf_20230426_alphabet_10Q.pkl')
+    demo_data['hr_policy'] = pd.read_pickle('./temp/vector_store_data_typedf_hr_policy_vectors.pkl')
+    demo_data['rent_agreement'] = pd.read_pickle('./temp/vector_store_data_typedf_rent_agreement.pkl')
+    demo_data['health_insurance_policy'] = pd.read_pickle('./temp/vector_store_data_typedf_insurance_policy.pkl')
+    demo_data['company_bylaw'] = pd.read_pickle('./temp/vector_store_data_typedf_company_bylaw.pkl')
+    return demo_data
+
+
+
 
 
 def reset_session() -> None:
@@ -49,6 +58,7 @@ def reset_session() -> None:
     st.session_state['demo_mode'] = "DemoMode"
     st.session_state['demo_mode_vector_store_data_typedf'] = get_predefined_vector_store()
     st.session_state['vector_store_flag_demo'] = False
+    st.session_state['query_vectors'] = []
     
 def hard_reset_session() -> None: 
     st.session_state = {states : [] for states in st.session_state}
@@ -58,13 +68,17 @@ def create_session_state():
     """
     Creating session states for the app.
     """
+    if 'query_vectors' not in st.session_state:
+        st.session_state['query_vectors'] = []
     if "demo_mode_vector_store_data_typedf" not in st.session_state:
         st.session_state['demo_mode_vector_store_data_typedf'] = get_predefined_vector_store()
     if 'vector_store_flag_demo' not in st.session_state:
-        if not st.session_state['demo_mode_vector_store_data_typedf'].empty:
+        if st.session_state['demo_mode_vector_store_data_typedf']:
             st.session_state['vector_store_flag_demo'] = True
         else:
             st.session_state['vector_store_flag_demo'] = False
+    if "demo_mode_dataset_selection" not in st.session_state:
+        st.session_state['demo_mode_dataset_selection'] = "HR Policy"
     if "demo_mode" not in st.session_state:
         st.session_state['demo_mode'] = "Demo Mode"
     if "document_summary_mapreduce" not in st.session_state:
@@ -138,9 +152,9 @@ def create_session_state():
     if 'process_doc' not in st.session_state:
         st.session_state['process_doc'] = False
     if 'chunk_size' not in st.session_state:
-        st.session_state['chunk_size'] = 500
+        st.session_state['chunk_size'] = 2000
     if 'top_sort_value' not in st.session_state:
-        st.session_state['top_sort_value'] = 5
+        st.session_state['top_sort_value'] = 3
 
 
 def clear_chat() -> None:
