@@ -254,3 +254,67 @@ def get_evaluation_for_tab():
         st.markdown( """<a style='display: block; text-align: center;' href="https://github.com/google-research/google-research/tree/master/rouge">Rouge Score</a>""",
                     unsafe_allow_html=True,
                     )
+
+
+def get_document_link_for_demo_documents(document_choice):
+    if document_choice == "HR Policy":
+            url = "https://hr.karvy.com/HRpolicies/HR_Policy_Manual_KFSLnew.pdf"
+            st.markdown(f"""<a style='display: block; text-align: center; color: red;' href={url}>View Document</a>""",
+                                    unsafe_allow_html=True,
+                                    )
+    elif document_choice == "Rent Agreement":
+        url = "https://assets1.cleartax-cdn.com/cleartax/images/1655708276_rentalagreementsampleandallyouneedtoknow.pdf"
+        st.markdown(f"""<a style='display: block; text-align: center; color: red;' href={url}>View Document</a>""",
+                                unsafe_allow_html=True,
+                                )
+    elif document_choice == "Health Insurance Policy":
+        url = "https://nationalinsurance.nic.co.in/sites/default/files/1.%20Policy-%20NMP.pdf"
+        st.markdown(f"""<a style='display: block; text-align: center; color: red;' href={url}>View Document</a>""",
+                                unsafe_allow_html=True,
+                                )
+    
+    elif document_choice == "Quarterly Earnings Report":
+        url = "hhttps://abc.xyz/investor/static/pdf/2023Q1_alphabet_earnings_release.pdf"
+        st.markdown(f"""<a style='display: block; text-align: center; color: red;' href={url}>View Document</a>""",
+                                unsafe_allow_html=True,
+                                )
+    elif document_choice == "Bylaw":
+        url = "https://www.imf.org/external/pubs/ft/bl/pdf/by-laws.pdf"
+        st.markdown(f"""<a style='display: block; text-align: center; color: red;' href={url}>View Document</a>""",
+                                unsafe_allow_html=True,
+                                )
+
+
+def get_sample_question_for_demo_documents(document_choice):
+    if document_choice == "HR Policy":
+            st.write("1. What are the interviewing guidelines?")
+            st.write("2. What documents are required at the time of joining?")
+            st.write("3. What is the cellphone usage policy? What are the limits for monthly reimbursement by level?")
+            st.write("4. What are the conditions in which Gratuity is not paid. Please list them as individual points.")
+            st.write("5. When is performance appraisal done in the company? What are the different ratings for any KRA?")
+    elif document_choice == "Rent Agreement":
+        st.write("1. What if there is a dispute in this agreement?")
+        st.write("2. What is the notice period needed if one has to terminate this agreement?")
+        st.write("3. If minor repairs need to be done, who is responsible for it? And what about major repairs?")
+        st.write("4. Can the owner use this property for any purpose other than residing there? What is not allowed?")
+        st.write("5. Under what conditions can the owner visit in person?")
+
+    elif document_choice == "Health Insurance Policy":
+        st.write("1. What are the systems of medicine supported?")
+        st.write("2. What are the various discounts provided? Can you provide more information on the Online payment discount?")
+        st.write("3. What are the contact details for the insurance person in Karnataka?")
+        st.write("4. What are the time limits for submission of the claim documents?")
+        st.write("5. What operations are included in the area of tonsils and adenoids?")
+    
+    elif document_choice == "Quarterly Earnings Report":
+        st.write("1. What was the cost of reduction in workforce?")
+        st.write("2. What is the total workforce in March 2023? How does it compare to that in March 2022? What does it mean in terms of percentage increase in employees?")
+        st.write("3. Operating income loss is being reported for the Quarters ending 2022 and 2023. What are the groups under which it's reported? How did Cloud do in terms of business?")
+        st.write("4. What was the total income from operations for quarter ending in March 31, 2023?")
+        st.write("5. What is the total revenue for the quarter ending March 31, 2023? How much of a percentage increase or decrease over the same period last year?")
+    elif document_choice == "Bylaw":
+        st.write("1. What are the laws around proxy voting?")
+        st.write("2. What happens when there is a vacancy for a Director?")
+        st.write("3. What is the working language of the fund?")
+        st.write("4. Who has certified this document?")
+        st.write("5. What is section O-7?")

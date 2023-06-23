@@ -59,6 +59,7 @@ def reset_session() -> None:
     st.session_state['demo_mode_vector_store_data_typedf'] = get_predefined_vector_store()
     st.session_state['vector_store_flag_demo'] = False
     st.session_state['query_vectors'] = []
+    st.session_state['demo_mode_dataset_selection'] = "HR Policy"
     
 def hard_reset_session() -> None: 
     st.session_state = {states : [] for states in st.session_state}
