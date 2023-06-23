@@ -36,6 +36,14 @@ import src.tab_source as tab_source
 # ##creating session states
 create_session_state()
 
+# Setting up logger
+import google.cloud.logging
+client = google.cloud.logging.Client(project=st.session_state['env_config']['gcp']['PROJECT_ID'])
+client.setup_logging()
+
+log_name = "docy-app-log"
+logger = client.logger(log_name)
+
 @st.cache_data()
 def get_image_displayed(path):
     image = Image.open(path)
@@ -252,6 +260,7 @@ with st.container():
 
         # get the custom relevant chunks from all the chunks in vector store.
         if question:
+            logger.log_text(f"Docy in Action: [{document_choice}]-[{question}]")
             if st.session_state['vector_db'] == "Pandas":
                 context, top_matched_df, source = get_filter_context_from_vectordb(vector_db_choice = st.session_state['vector_db'],
                                      question = st.session_state['question'],
