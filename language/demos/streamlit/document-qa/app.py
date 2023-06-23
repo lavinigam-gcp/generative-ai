@@ -187,7 +187,7 @@ with st.container():
         if st.session_state['demo_mode_vector_store_data_typedf']:
             st.session_state['vector_db'] = "Demo Mode"
             st.session_state['top_sort_value'] = 5
-        document_choice = st.radio("Select the Document", ( "HR Policy", "Rent Agreement" ,"Health Insurance Policy", "Quarterly Earnings Report", "Bylaw"),horizontal=True)
+        document_choice = st.selectbox("Select the Document", ( "HR Policy", "Rent Agreement" ,"Health Insurance Policy", "Quarterly Earnings Report", "Bylaw"))
         st.session_state['demo_mode_dataset_selection'] = document_choice
         if document_choice == "HR Policy":
             url = "https://hr.karvy.com/HRpolicies/HR_Policy_Manual_KFSLnew.pdf"
