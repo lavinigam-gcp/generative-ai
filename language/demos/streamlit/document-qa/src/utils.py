@@ -209,10 +209,6 @@ def get_filter_context_from_vectordb(vector_db_choice:str = "Pandas",
         
         return (context, top_matched_df,source)
     elif vector_db_choice == "Demo Mode" and st.session_state['vector_store_flag_demo']:
-        # st.write(st.session_state['vector_store_data_typedf'])
-        # st.write(st.session_state['vector_store_data_typedf'].dtypes)
-        # global query_vector
-        
         choice_dict ={
                     "HR Policy" : "hr_policy",
                     "Rent Agreement": "rent_agreement",

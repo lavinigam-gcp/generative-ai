@@ -174,7 +174,7 @@ with st.container():
 
         if st.session_state['demo_mode_vector_store_data_typedf']:
             st.session_state['vector_db'] = "Demo Mode"
-            st.session_state['top_sort_value'] = 5
+            st.session_state['top_sort_value'] = 3
         document_choice = st.selectbox("Select the Document", ( "HR Policy", "Rent Agreement" ,"Health Insurance Policy", "Quarterly Earnings Report", "Bylaw"))
         st.session_state['demo_mode_dataset_selection'] = document_choice
         #Show the document link
@@ -186,11 +186,12 @@ with st.container():
         tab1, tab2 = st.tabs(["AskDocy", "DocyChat"])
         with tab1: 
             # question = st.text_input('What would you like to ask the documents?')
-            question = st.text_input('What would you like to ask the documents?',
-                                    placeholder ="Ask your question here...\nYou can check sample question at the bottom of the page to get started.",
-                                     key = "question_input", on_change=question_query_input_submit)
+            question = st.text_input('What would you like to ask the documents?')
+                                    
+                                    # ,placeholder ="Ask your question here...\nYou can check sample question at the bottom of the page to get started.",
+                                    #  key = "question_input", on_change=question_query_input_submit)
                                     #  ,key = "question_input", on_change=question_query_input_submit)
-            # st.session_state['question'] = question
+            st.session_state['question'] = question
         with tab2:
             tab_source.get_askdocy_for_tab()
 
@@ -275,9 +276,11 @@ with st.container():
             elif st.session_state['demo_mode'] == "Demo Mode":
                 st.write(":red[You have selected this document for demo mode: ]",st.session_state['demo_mode_dataset_selection'])
                 st.write(":green[Question Asked: ]", st.session_state['question'])
+                # st.write(":red[CONTEXT] ",context)
                 #Extracted Answer and Insights Block: 
                 st.markdown("<h5 style='text-align: left; color: black;'>Extracted Answers</h5>", unsafe_allow_html=True)
-                tab_source.get_grounded_answer_for_tab(question=question, context=context)
+                tab_source.get_grounded_answer_for_tab(question=st.session_state['question'], 
+                                                       context=context)
 
                 logger.log_text(f"""Logging Docy in Action: [Application Mode: {st.session_state['demo_mode']}, 
                     \t Question: {st.session_state['question']} , \t Answer: {st.session_state['answer']}]
