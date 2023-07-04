@@ -1,0 +1,11 @@
+google-cloud-aiplatform
+google-cloud-documentai
+google-cloud-logging
+backoff
+ruamel.yaml
+streamlit
+streamlit-chat
+pandas
+PyPDF2
+chromadb
+rouge-score
