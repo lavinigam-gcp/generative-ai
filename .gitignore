@@ -110,8 +110,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-.vscode
-.github
+.vscode/*  
+.github/*
 
 # Spyder project settings
 .spyderproject
