@@ -48,10 +48,15 @@ First step is to visit the `src/env.yaml` file and set a few key properties in t
 - DOCAI_PROCESSOR_DISPLAY_NAME : The name of the Document Processor created. 
 - DOCAI_PROCESSOR_ID : The ID of the Document Processor created.
 
+Next, create a name for the Cloud Run Service (e.g. mydocqaservice)
+```sh
+SERVICE_NAME=<REPLACE_WITH_YOUR_SERVICE_NAME>
+```
+
 ### Build the Container Image
 
 ```sh
-gcloud auth configure-docker $REGION.pkg.dev
+gcloud auth configure-docker $REGION-docker.pkg.dev
 gcloud builds submit --tag $REGION-docker.pkg.dev/$PROJECT_ID/$AR_REPO/$SERVICE_NAME
 ```
 
