@@ -1,8 +1,7 @@
-import functions_framework
 import os
 import json
+import functions_framework
 
-from google.cloud import aiplatform
 import google.cloud.logging
 
 import vertexai
@@ -14,18 +13,17 @@ LOCATION = os.environ.get('FUNCTION_REGION','-')
 client = google.cloud.logging.Client(project=PROJECT_ID)
 client.setup_logging()
 
-log_name = "predictCode-cloudfunction-log"
-logger = client.logger(log_name)
+LOG_NAME = "predictCode-cloudfunction-log"
+logger = client.logger(LOG_NAME)
 
 @functions_framework.http
 def predictCode(request):
 
     request_json = request.get_json(silent=True)
-    request_args = request.args
 
     if request_json and 'prompt' in request_json:
         prompt = request_json['prompt']
-        logger.log("Received request for prompt: {}".format(prompt))
+        logger.log(f"Received request for prompt: {prompt}")
         vertexai.init(project=PROJECT_ID, location=LOCATION)
         parameters = {
             "temperature": 0.2,
@@ -33,8 +31,8 @@ def predictCode(request):
         }
         model = CodeGenerationModel.from_pretrained("code-bison@001")
         prompt_response = model.predict(prompt,**parameters)
-        logger.log("PaLM Code Bison Model response: {}".format(prompt_response.text))
+        logger.log(f"PaLM Code Bison Model response: {prompt_response.text}")
     else:
-        prompt_response = 'No prompt provided.'
-    
+        prompt_response = "No prompt provided."
+
     return json.dumps({"response_text":prompt_response.text})

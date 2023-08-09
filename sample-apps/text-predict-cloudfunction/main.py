@@ -1,6 +1,6 @@
-import functions_framework
 import os
 import json
+import functions_framework
 
 import google.cloud.logging
 
@@ -20,11 +20,10 @@ logger = client.logger(log_name)
 def predictText(request):
 
     request_json = request.get_json(silent=True)
-    request_args = request.args
 
     if request_json and 'prompt' in request_json:
         prompt = request_json['prompt']
-        logger.log("Received request for prompt: {}".format(prompt))
+        logger.log(f"Received request for prompt: {prompt}")
         vertexai.init(project=PROJECT_ID, location=LOCATION)
         model = TextGenerationModel.from_pretrained("text-bison@001")
         parameters = {
@@ -34,8 +33,8 @@ def predictText(request):
             "top_k": 40
         }
         prompt_response = model.predict(prompt,**parameters)
-        logger.log("PaLM Text Bison Model response: {}".format(prompt_response.text))
+        logger.log("PaLM Text Bison Model response: {prompt_response.text}")
     else:
         prompt_response = 'No prompt provided.'
-    
+
     return json.dumps({"response_text":prompt_response.text})

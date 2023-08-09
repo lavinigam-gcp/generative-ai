@@ -7,7 +7,6 @@ PROJECT_ID = "$PROJECT_ID" #Your Google Cloud Project ID
 LOCATION = "us-central1"   #us-central1 for now
 vertexai.init(project=PROJECT_ID, location=LOCATION)
 
-
 def create_session():
     chat_model = ChatModel.from_pretrained("chat-bison@001")
     chat = chat_model.start_chat()
@@ -20,19 +19,23 @@ def response(chat, message):
         "top_p": 0.8,
         "top_k": 40
     }
-    response = chat.send_message(message, **parameters)
-    return response.text
+    result = chat.send_message(message, **parameters)
+    return result.text
 
 @app.route('/')
 def index():
+    ###
     return render_template('index.html')
 
 @app.route('/palm2', methods=['GET', 'POST'])
-def vertexPalM():
-    user_input = request.args.get('user_input') if request.method == 'GET' else request.form['user_input']
+def vertex_palm():
+    user_input = ""
+    if request.method == 'GET':
+        user_input = request.args.get('user_input')
+    else:
+        user_input = request.form['user_input']
     chat_model = create_session()
     content = response(chat_model,user_input)
-
     return jsonify(content=content)
 
 if __name__ == '__main__':
