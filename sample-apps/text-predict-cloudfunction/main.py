@@ -2,7 +2,6 @@ import functions_framework
 import os
 import json
 
-from google.cloud import aiplatform
 import google.cloud.logging
 
 import vertexai
