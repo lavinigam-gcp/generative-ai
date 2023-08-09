@@ -31,7 +31,7 @@ You can create a bucket either from Google Cloud Console or from the command lin
 Assuming that you have a copy of this project on your local machine with `gcloud` SDK setup on the machine, follow these steps:
 1. Go to the root folder of this project `app2-cf-python-vertexai-http`.
 2. You should have both the `main.py` and `requirements.txt` file present in this folder.
-3. Provide the following command:
+3. Provide the following command. Remember to replace the variables `$PROJECT_ID` and `$REGION` with the correct values for your Google Cloud Project Id and Region name respectively:
 
    ```
    gcloud functions deploy summarizeArticles \
@@ -40,8 +40,8 @@ Assuming that you have a copy of this project on your local machine with `gcloud
    --source=. \
    --region=$REGION \
    --project=$PROJECT_ID \
-   --entry-point=hello_gcs \
-   --trigger-bucket=$BUCKET1 \
+   --entry-point=summarize_gcs_object \
+   --trigger-bucket=$BUCKET \
    --set-env-vars=GCP_PROJECT=$PROJECT_ID,FUNCTION_REGION=$REGION \
    --max-instances=1 \
    --quiet
