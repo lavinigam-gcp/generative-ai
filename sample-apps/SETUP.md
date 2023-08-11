@@ -77,7 +77,7 @@ echo $GOOGLE_CLOUD_PROJECT
 In order to use the various services we will need throughout this project, we will enable a few APIs. We will do so by launching the following command in Cloud Shell:
 
 ```bash
-$ gcloud services enable \
+gcloud services enable \
       cloudbuild.googleapis.com \
       cloudfunctions.googleapis.com \
       run.googleapis.com \ 
@@ -97,6 +97,6 @@ Operation "operations/acf.5c5ef4f6-f734-455d-b2f0-ee70b5a17322" finished success
 We've put all the samples you need for this project into a Git repo in the `sample_apps` folder. Clone the repo in Cloud Shell using the following command:
 
 ```bash
-$ git clone https://github.com/GoogleCloudPlatform/generative-ai.git
+git clone https://github.com/GoogleCloudPlatform/generative-ai.git
 ```
 
