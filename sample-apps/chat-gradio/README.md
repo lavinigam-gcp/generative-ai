@@ -15,7 +15,7 @@ Next, look at the following script, replace the variables at the start and run t
 PROJECT_ID=<REPLACE_WITH_YOUR_PROJECT_ID>
 REGION=<REPLACE_WITH_YOUR_GCP_REGION_NAME>
 AR_REPO=<REPLACE_WITH_YOUR_AR_REPO_NAME>
-SERVICE_NAME=streamlit-hello-world-text
+SERVICE_NAME=chat-gradio-app
 gcloud artifacts repositories create $AR_REPO --location=$REGION --repository-format=Docker
 gcloud auth configure-docker $REGION-docker.pkg.dev
 gcloud builds submit --tag $REGION-docker.pkg.dev/$PROJECT_ID/$AR_REPO/$SERVICE_NAME
