@@ -67,7 +67,7 @@ Assuming that you have a copy of this project on your local machine with `gcloud
    --region=$FUNCTIONREGION \
    --project=$PROJECT_ID \
    --entry-point=summarize_gcs_object \
-   --trigger-bucket=$BUCKET \
+   --trigger-bucket=$BUCKETNAME \
    --set-env-vars=GCP_PROJECT=$GCP_PROJECT,FUNCTION_REGION=$FUNCTION_REGION \
    --max-instances=1 \
    --quiet
