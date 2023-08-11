@@ -48,7 +48,7 @@ gsutil mb gs://$BUCKETNAME
 ```
 
 ```bash
-gsutil mb gs://$BUCKET-summaries
+gsutil mb gs://$BUCKETNAME-summaries
 ```
 
 ### Deploy the function
