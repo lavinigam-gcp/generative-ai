@@ -33,7 +33,7 @@ Assuming that you have a copy of this project on your local machine with `gcloud
    --source=. \
    --entry-point=predictText \
    --trigger-http \
-   --set-env-vars=GCP_PROJECT=$GCP_PROJECT,FUNCTION_REGION=$FUNCTIONREGION \
+   --set-env-vars=GCP_PROJECT=$GCP_PROJECT,FUNCTION_REGION=$FUNCTION_REGION \
    --allow-unauthenticated
    ```
 
