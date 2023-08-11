@@ -34,7 +34,8 @@ In order to use the various services we will need throughout this project, we wi
 $ gcloud services enable \
       cloudbuild.googleapis.com \
       cloudfunctions.googleapis.com \
-      run.googleapis.com
+      run.googleapis.com \ 
+      artifactregistry.googleapis.com
 ```
 After some time, you should see the operation finish successfully:
 
