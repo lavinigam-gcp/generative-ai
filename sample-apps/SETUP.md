@@ -35,7 +35,9 @@ $ gcloud services enable \
       cloudbuild.googleapis.com \
       cloudfunctions.googleapis.com \
       run.googleapis.com \ 
-      artifactregistry.googleapis.com
+      artifactregistry.googleapis.com \ 
+      logging.googleapis.com \
+      storage-component.googleapis.com \
 ```
 After some time, you should see the operation finish successfully:
 
