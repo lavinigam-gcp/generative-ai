@@ -11,9 +11,9 @@ These code samples are provided as templates that you can use. You can go throug
 
 | Application Name | Description | Technologies Used |
 |---|---|---|
-|[chat-flask-cloudrun](chat-flask-cloudrun)|---|---|
-|[chat-gradio](chat-gradio)|---|---|
-|[chat-streamlit](chat-streamlit)|---|---|
-|[code-predict-cloudfunction](code-predict-cloudfunction)|---|---|
-|[text-predict-cloudfunction](text-predict-cloudfunction)|---|---|
-|[summarization-gcs-cloudfunction](summarization-gcs-cloudfunction)|---|---|
+|[chat-flask-cloudrun](chat-flask-cloudrun)|Python Flask-based Web Chat Application interacting with Vertex AI Chat PaLM Model.|Cloud Run, Python Flask|
+|[chat-gradio](chat-gradio)|Gradio Web Application interacting with Vertex AI Text PaLM Model.|Cloud Run, Gradio, Python|
+|[chat-streamlit](chat-streamlit)|Streamlit Web Application interacting with Vertex AI Text PaLM Model.|Cloud Run, Streamlit, Python|
+|[code-predict-cloudfunction](code-predict-cloudfunction)|Python Cloud Function that invokes the Vertex AI Text PaLM Model.|Cloud Functions v2, Python|
+|[text-predict-cloudfunction](text-predict-cloudfunction)|Python Cloud Function that invokes the Vertex AI Code PaLM Model.|Cloud Functions v2, Python|
+|[summarization-gcs-cloudfunction](summarization-gcs-cloudfunction)|Python Cloud Function processing Cloud Storage documents and summarizes the contents via the Vertex AI Text PaLM Model. |Cloud Functions v2, Cloud Storage, Python|
