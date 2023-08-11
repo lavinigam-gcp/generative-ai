@@ -44,11 +44,11 @@ export BUCKETNAME=gs://<Your_Bucket_Name>>
 You can create a bucket either from Google Cloud Console or from the command line via the `gsutil` command:
 
 ```bash
-gsutil mb $BUCKETNAME -l $FUNCTION_REGION
+gsutil mb -l $FUNCTION_REGION $BUCKETNAME
 ```
 
 ```bash
-gsutil mb $BUCKETNAME-summaries -l $FUNCTION_REGION
+gsutil mb -l $FUNCTION_REGION $BUCKETNAME-summaries
 ```
 
 ### Deploy the function
