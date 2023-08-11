@@ -34,12 +34,22 @@ These variables can be set via the following [instructions](https://cloud.google
 
 We will need to create 2 GCS buckets:
 
-- The first bucket will be used to upload the files to summarize. Let us call the bucket `$BUCKET` (Replace it with your unique GCS Bucket name)
-- The second bucket will having a prefix `-summaries`. So create a bucket with the following name `$BUCKET-summaries`
+- The first bucket will be used to upload the files to summarize. Let us call the bucket `$BUCKETNAME` (Replace it with your unique GCS Bucket name)
+
+```bash
+export BUCKETNAME=<Your_Bucket_Name>>
+```
+- The second bucket will having a prefix `-summaries`. So create a bucket with the following name `$BUCKETNAME-summaries`
 
 You can create a bucket either from Google Cloud Console or from the command line via the `gsutil` command:
-`gsutil mb $BUCKET`
-`gsutil mb $BUCKET-summaries`
+
+```bash
+gsutil mb gs://$BUCKETNAME
+```
+
+```bash
+gsutil mb gs://$BUCKET-summaries
+```
 
 ### Deploy the function
 
