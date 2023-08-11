@@ -64,8 +64,8 @@ Assuming that you have a copy of this project on your local machine with `gcloud
    --gen2 \
    --runtime=python311 \
    --source=. \
-   --region=$FUNCTIONREGION \
-   --project=$PROJECT_ID \
+   --region=$FUNCTION_REGION \
+   --project=$GCP_PROJECT \
    --entry-point=summarize_gcs_object \
    --trigger-bucket=gs://$BUCKETNAME \
    --set-env-vars=GCP_PROJECT=$GCP_PROJECT,FUNCTION_REGION=$FUNCTION_REGION \
