@@ -72,7 +72,7 @@ echo $GOOGLE_CLOUD_PROJECT
 <PROJECT_ID>
 ```
 
-## Enable the cloud APIs
+## Enable the Google Cloud APIs
 
 In order to use the various services we will need throughout this project, we will enable a few APIs. We will do so by launching the following command in Cloud Shell:
 
@@ -84,6 +84,7 @@ $ gcloud services enable \
       artifactregistry.googleapis.com \ 
       logging.googleapis.com \
       storage-component.googleapis.com \
+      aiplatform.googleapis.com
 ```
 After some time, you should see the operation finish successfully:
 
