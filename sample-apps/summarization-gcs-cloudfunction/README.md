@@ -37,18 +37,18 @@ We will need to create 2 GCS buckets:
 - The first bucket will be used to upload the files to summarize. Let us call the bucket `$BUCKETNAME` (Replace it with your unique GCS Bucket name)
 
 ```bash
-export BUCKETNAME=<Your_Bucket_Name>>
+export BUCKETNAME=gs://<Your_Bucket_Name>>
 ```
 - The second bucket will having a prefix `-summaries`. So create a bucket with the following name `$BUCKETNAME-summaries`
 
 You can create a bucket either from Google Cloud Console or from the command line via the `gsutil` command:
 
 ```bash
-gsutil mb gs://$BUCKETNAME
+gsutil mb $BUCKETNAME -l $FUNCTION_REGION
 ```
 
 ```bash
-gsutil mb gs://$BUCKETNAME-summaries
+gsutil mb $BUCKETNAME-summaries -l $FUNCTION_REGION
 ```
 
 ### Deploy the function
