@@ -2,7 +2,7 @@
 
 This application demonstrates a Cloud Run application that uses the [Streamlit](https://streamlit.io/) framework. This project is inspired/taken from the following repository: [https://github.com/lavinigam-gcp/vertex_palm_streamlit_flask/tree/main/demo/streamlit/hello-world-text](https://github.com/lavinigam-gcp/vertex_palm_streamlit_flask/tree/main/demo/streamlit/hello-world-text).
 
-<img src="streamlitapp-screen.png"/>
+![Streamlit Chat App Screen](../images/streamlitapp-screen.png "Streamlit Chat App")
 
 ## Deploying the Application to Cloud Run
 
