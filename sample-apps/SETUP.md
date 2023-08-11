@@ -26,6 +26,52 @@ It should only take a few moments to provision and connect to the environment. W
 
 This virtual machine is loaded with all the development tools you'll need. It offers a persistent 5GB home directory, and runs on Google Cloud, greatly enhancing network performance and authentication. All of your work in this codelab can be done within a browser. You do not need to install anything.
 
+Once connected to Cloud Shell, you should see that you are already authenticated and that the project is already set to your project ID.
+
+Run the following command in Cloud Shell to confirm that you are authenticated:
+
+Once connected to Cloud Shell, you should see that you are already authenticated and that the project is already set to your `PROJECT_ID``.
+
+```bash
+gcloud auth list
+```
+
+#### Command Output
+
+```bash
+Credentialed accounts:
+ - <myaccount>@<mydomain>.com (active)
+```
+
+```bash
+gcloud config list project
+```
+
+#### Command Output
+
+```bash
+[core]
+project = <PROJECT_ID>
+```
+
+If, for some reason, the project is not set, simply issue the following command:
+
+```bash
+gcloud config set project <PROJECT_ID>
+```
+
+Cloud Shell also sets some environment variables by default, which may be useful as you run future commands.
+
+```bash
+echo $GOOGLE_CLOUD_PROJECT
+```
+
+#### Command output
+
+```bash
+<PROJECT_ID>
+```
+
 ## Enable the cloud APIs
 
 In order to use the various services we will need throughout this project, we will enable a few APIs. We will do so by launching the following command in Cloud Shell:
@@ -43,5 +89,13 @@ After some time, you should see the operation finish successfully:
 
 ```bash
 Operation "operations/acf.5c5ef4f6-f734-455d-b2f0-ee70b5a17322" finished successfully.
+```
+
+## Clone the Repository
+
+We've put all the samples you need for this project into a Git repo in the `sample_apps` folder. Clone the repo in Cloud Shell using the following command:
+
+```bash
+$ git clone https://github.com/GoogleCloudPlatform/generative-ai.git
 ```
 
