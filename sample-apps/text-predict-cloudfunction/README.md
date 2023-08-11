@@ -29,7 +29,7 @@ Assuming that you have a copy of this project on your local machine with `gcloud
    gcloud functions deploy predict \
    --gen2 \
    --runtime=python311 \
-   --region=REGION \
+   --region=$FUNCTION_REGION \
    --source=. \
    --entry-point=predictText \
    --trigger-http \
