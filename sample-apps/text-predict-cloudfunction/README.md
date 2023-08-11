@@ -29,7 +29,7 @@ Assuming that you have a copy of this project on your local machine with `gcloud
 
 1. Go to the root folder of this project.
 2. You should have both the `main.py` and `requirements.txt` file present in this folder.
-3. Provide the following command. Remember to replace the variables `$PROJECT_ID` and `$REGION` with the correct values for your Google Cloud Project Id and Region name respectively:
+3. Provide the following command:
 
    ```bash
    gcloud functions deploy predictText \
