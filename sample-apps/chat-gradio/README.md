@@ -1,7 +1,7 @@
 # Cloud Run application utilizing Gradio Framework that demonstrates working with Vertex AI API
 This application demonstrates a Cloud Run application that uses the [Gradio](https://www.gradio.app/) framework. 
 
-<img src="image/text-demo.png"/>
+<img src="images/text-demo.png"/>
 
 ## Deploying the Application to Cloud Run
 
